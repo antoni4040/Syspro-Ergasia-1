@@ -5,13 +5,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include "verification.h"
+#include "structures.h"
 
 int main(int argc, char **argv)
 {
     // Initial command line parameters:
     int bitCoinValue = -1;
-    char* bitCoinBalancesFile;
-    char* transactionsFile;
+    char* bitCoinBalancesFile = NULL;
+    char* transactionsFile = NULL;
     int senderHashtableNumOfEntries = -1;
     int receiverHashtableNumOfEntries = -1;
     int bucketSize = -1;
@@ -65,4 +66,7 @@ int main(int argc, char **argv)
     {
         printf("all good");
     }
+
+    // Create sender hash table:
+    Bucket** senderHashTable = initializeTransactionHashTable(senderHashtableNumOfEntries, bucketSize);
 }

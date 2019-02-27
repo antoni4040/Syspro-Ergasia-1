@@ -5,4 +5,4 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories( ${MY_SOURCE_DIR})
 
-add_executable(Ergasia_1 main.c verification.c)
+add_executable(Ergasia_1 main.c verification.c structures.c)

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "verification.h"
 #include "structures.h"
+#include "file_input.h"
 
 int main(int argc, char **argv)
 {
@@ -69,4 +70,8 @@ int main(int argc, char **argv)
 
     // Create sender hash table:
     Bucket** senderHashTable = initializeTransactionHashTable(senderHashtableNumOfEntries, bucketSize);
+    Bucket** receiverHashTable = initializeTransactionHashTable(receiverHashtableNumOfEntries, bucketSize);
+
+    readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable,
+            senderHashtableNumOfEntries, receiverHashtableNumOfEntries);
 }

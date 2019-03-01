@@ -65,13 +65,17 @@ int main(int argc, char **argv)
     if(allParametersGiven(bitCoinValue, bitCoinBalancesFile, transactionsFile,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries, bucketSize))
     {
-        printf("all good");
+        printf("all good\n");
     }
 
     // Create sender hash table:
     Bucket** senderHashTable = initializeTransactionHashTable(senderHashtableNumOfEntries, bucketSize);
     Bucket** receiverHashTable = initializeTransactionHashTable(receiverHashtableNumOfEntries, bucketSize);
 
+    // Read the transactions file and setup the hash tables:
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries);
+
+
+    return 0;
 }

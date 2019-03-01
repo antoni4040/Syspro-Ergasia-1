@@ -36,6 +36,9 @@ void readTransactionsFile(char* transactionFileName, Bucket** senderHashTable, B
         date = strtok(NULL, " ");
         time = strtok(NULL, " ");
         Transaction* newTransaction = initializeTransaction(transactionID, senderWallet, receiverWallet, value, date, time);
-        insertToTransactionHashTable(senderHashTable, newTransaction, senderWallet, senderHashTableSize);
+        insertToTransactionHashTable(senderHashTable, newTransaction, senderWallet, senderHashTableSize, 1);
+        insertToTransactionHashTable(receiverHashTable, newTransaction, receiverWallet, receiverHashTableSize, 0);
     }
+
+    printTransactionHashTable(senderHashTable, senderHashTableSize);
 }

@@ -4,6 +4,8 @@
 #ifndef ERGASIA_1_STRUCTURES_H
 #define ERGASIA_1_STRUCTURES_H
 
+#include "hashtable.h"
+
 typedef struct Date
 {
     int day;
@@ -39,28 +41,16 @@ typedef struct TransactionLinkedList
     TransactionNode* tail;
 } TransactionLinkedList;
 
-typedef struct Bucket
-{
-    TransactionLinkedList** transactionLists;
-    int currentIndex;
-    int size;
-    struct Bucket* next;
-} Bucket;
-
 void printTransaction(Transaction* transaction, int bucket_index, int bucket);
-void printBucket(Bucket* bucket, int bucket_index);
-void printTransactionHashTable(Bucket** hashTable, int hashTableSize);
-
+void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize);
+void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize);
 Time* initializeTime(char* timeString);
 Date* initializeDate(char* dateString);
 Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
                                    int value, char* date, char* time);
 TransactionNode* initializeTransactionNode(Transaction* transaction);
 TransactionLinkedList* initializeTransactionLinkedList(TransactionNode* transactionNode);
-Bucket* initializeBucket(int bucketSize);
-void insertToBucket(Bucket* bucket, TransactionLinkedList* transactionLinkedList);
-Bucket** initializeTransactionHashTable(int hashTableSize, int bucketSize);
-void insertToTransactionHashTable(Bucket** hashTable, Transaction* transaction,
+void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
                                   char* keyToHash, int hashTableSize, int walletIDType);
 void freeTransactionHashTable(Bucket** transactionHashTable, int hashTableSize);
 int hash_function(char* string, int max);

@@ -8,7 +8,7 @@
 
 #define BUFFER_SIZE 256
 
-void readTransactionsFile(char* transactionFileName, Bucket** senderHashTable, Bucket** receiverHashTable,
+void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable, HashTable* receiverHashTable,
         int senderHashTableSize, int receiverHashTableSize)
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
@@ -19,6 +19,8 @@ void readTransactionsFile(char* transactionFileName, Bucket** senderHashTable, B
     int value;
     char* date;
     char* time;
+
+    printf("\n alsdkfja\n");
 
     //Check transaction file name is correct:
     if(transactionFile == NULL)
@@ -40,5 +42,5 @@ void readTransactionsFile(char* transactionFileName, Bucket** senderHashTable, B
         insertToTransactionHashTable(receiverHashTable, newTransaction, receiverWallet, receiverHashTableSize, 0);
     }
 
-    printTransactionHashTable(senderHashTable, senderHashTableSize);
+    printTransactionHashTable(senderHashTable, senderHashTableSize, senderHashTable->bucketSize);
 }

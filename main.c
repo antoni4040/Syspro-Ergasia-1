@@ -68,10 +68,13 @@ int main(int argc, char **argv)
         printf("all good\n");
     }
 
+    printf("\nasdfsdfssdlf\n");
     // Create sender hash table:
-    Bucket** senderHashTable = initializeTransactionHashTable(senderHashtableNumOfEntries, bucketSize);
-    Bucket** receiverHashTable = initializeTransactionHashTable(receiverHashtableNumOfEntries, bucketSize);
+    printf("%i %i\n", senderHashtableNumOfEntries, bucketSize);
+    HashTable* senderHashTable = initializeHashTable(senderHashtableNumOfEntries, bucketSize);
+    HashTable* receiverHashTable = initializeHashTable(receiverHashtableNumOfEntries, bucketSize);
 
+    printf("\nasdlf\n");
     // Read the transactions file and setup the hash tables:
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries);

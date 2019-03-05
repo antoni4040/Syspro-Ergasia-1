@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "file_input.h"
-#include "structures.h"
+#include "transactions.h"
 
 #define BUFFER_SIZE 256
 

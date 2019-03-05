@@ -1,4 +1,4 @@
-#include "structures.h"
+#include "transactions.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -108,7 +108,6 @@ void addToTransactionLinkedList(TransactionLinkedList* transactionLinkedList, Tr
 // Return place of wallet id in bucket or -1 if it's not there:
 int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int walletType)
 {
-    printf("FUCK!!!!\nFUCK!!!\nFUCK!");
     int found = -1;
     for(int i = 0; i < bucketSize / sizeof(void*); i++)
     {

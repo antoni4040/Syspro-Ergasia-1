@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "verification.h"
-#include "structures.h"
+#include "transactions.h"
 #include "file_input.h"
 
 int main(int argc, char **argv)

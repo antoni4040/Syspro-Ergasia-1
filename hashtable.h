@@ -1,4 +1,5 @@
 // Created by Antonis Karvelas.
+// Here lies the generic hash table.
 
 #ifndef ERGASIA_1_HASHTABLE_H
 #define ERGASIA_1_HASHTABLE_H

@@ -10,9 +10,12 @@ int main()
     {
         a[i] = &b;
     }
+
+    a[6] = (int*)10;
+
     for(int i = 0; i < 64 / sizeof(void*); i++)
     {
-        printf("%i\n", (int)*(int*)a[i]);
+        printf("%li\n", (long int)(int*)a[i]);
     }
     return 0;
 }

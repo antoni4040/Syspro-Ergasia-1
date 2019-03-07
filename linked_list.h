@@ -18,7 +18,7 @@ typedef struct LinkedList
     Node* tail;
 } LinkedList;
 
-Node* initializeTransactionNode(void* item);
-LinkedList* initializeTransactionLinkedList(Node* node);
+Node* initializeNode(void* item);
+LinkedList* initializeLinkedList(Node* node);
 void appendToLinkedList(LinkedList* linkedList, Node* node);
 #endif //ERGASIA_1_LINKEDLIST_H

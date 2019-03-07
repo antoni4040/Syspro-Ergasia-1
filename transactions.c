@@ -9,24 +9,24 @@ void printTransaction(Transaction* transaction, int bucket_index, int bucket)
             transaction->receiverWalletID, transaction->value, bucket_index, bucket);
 }
 
-void printTransactionList(TransactionLinkedList* transactionLinkedList,
+void printTransactionList(LinkedList* transactionLinkedList,
         int bucket_index, int bucket)
 {
     printf("TrList\n");
-    TransactionNode* transactionNode = transactionLinkedList->head;
+    Node* transactionNode = transactionLinkedList->head;
     do
     {
-        printTransaction(transactionNode->transaction, bucket_index, bucket);
+        printTransaction((Transaction*)(transactionNode->item), bucket_index, bucket);
         transactionNode = transactionNode->next;
     }while(transactionNode != NULL);
 }
 
 void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize)
 {
-    for(int i = 0; i < bucketSize / sizeof(void*) - 1; i++)
+    for(int i = 0; i < bucketSize / sizeof(void*) - 2; i++)
     {
         if(bucket[i] != NULL)
-            printTransactionList((TransactionLinkedList*)bucket[i], bucket_index, i);
+            printTransactionList((LinkedList*)bucket[i], bucket_index, i);
     }
 }
 
@@ -80,31 +80,6 @@ Transaction* initializeTransaction(int transactionID, char* senderWallet, char* 
     return newTransaction;
 }
 
-// Create a new transaction node with a given wallet ID and transaction:
-TransactionNode* initializeTransactionNode(Transaction* transaction)
-{
-    TransactionNode* newTransactionNode = malloc(sizeof(TransactionNode));
-    newTransactionNode->transaction = transaction;
-    newTransactionNode->next = NULL;
-    return newTransactionNode;
-}
-
-// Create a new transaction linked list and simply set the head and tail to the given transaction node:
-TransactionLinkedList* initializeTransactionLinkedList(TransactionNode* transactionNode)
-{
-    TransactionLinkedList* newTransactionLinkedList = malloc(sizeof(TransactionLinkedList));
-    newTransactionLinkedList->head = transactionNode;
-    newTransactionLinkedList->tail = transactionNode;
-    return newTransactionLinkedList;
-}
-
-// Add a transaction to a transaction linked list:
-void addToTransactionLinkedList(TransactionLinkedList* transactionLinkedList, TransactionNode* transactionNode)
-{
-    transactionLinkedList->tail->next = transactionNode;
-    transactionLinkedList->tail = transactionNode;
-}
-
 // Return place of wallet id in bucket or -1 if it's not there:
 int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int walletType)
 {
@@ -116,14 +91,14 @@ int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int
         // Wallet type 1 for sender, 0 for receiver:
         if(walletType == 1)
         {
-            if (strcmp(((TransactionLinkedList*)bucket[i])->head->transaction->senderWalletID, walletID) == 0) {
+            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->senderWalletID, walletID) == 0) {
                 found = i;
                 break;
             }
         }
         else
         {
-            if (strcmp(((TransactionLinkedList*)bucket[i])->head->transaction->receiverWalletID, walletID) == 0) {
+            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->receiverWalletID, walletID) == 0) {
                 found = i;
                 break;
             }
@@ -137,7 +112,7 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
         char* keyToHash, int hashTableSize, int walletIDType)
 {
     // Package the transaction in a transaction node:
-    TransactionNode* newTransactionNode = initializeTransactionNode(transaction);
+    Node* newTransactionNode = initializeNode(transaction);
     int index = hash_function(keyToHash, hashTableSize);
 
     // Go through buckets and see if a list exists:
@@ -158,14 +133,14 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
         bucketToInsert = hashTable->buckets[index];
         while(bucketToInsert[(bucketSize / sizeof(void*)) - 1] != NULL)
             bucketToInsert = (Bucket*)bucketToInsert[(bucketSize / sizeof(void*)) - 1];
-        TransactionLinkedList* newTransactionList = initializeTransactionLinkedList(newTransactionNode);
+        LinkedList* newTransactionList = initializeLinkedList(newTransactionNode);
         insertToBucket(bucketToInsert, newTransactionList, bucketSize);
     }
 
     // If wallet is already in a bucket, then add transaction to the list:
     else
     {
-        addToTransactionLinkedList((TransactionLinkedList*)bucketToInsert[position], newTransactionNode);
+        appendToLinkedList((LinkedList*)bucketToInsert[position], newTransactionNode);
     }
 
 }

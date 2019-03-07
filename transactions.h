@@ -5,6 +5,7 @@
 #define ERGASIA_1_TRANSACTIONS_H
 
 #include "hashtable.h"
+#include "linked_list.h"
 
 typedef struct Date
 {
@@ -29,20 +30,8 @@ typedef struct Transaction
     Time* time;
 } Transaction;
 
-typedef struct TransactionNode
-{
-    Transaction* transaction;
-    struct TransactionNode* next;
-} TransactionNode;
-
-typedef struct TransactionLinkedList
-{
-    TransactionNode* head;
-    TransactionNode* tail;
-} TransactionLinkedList;
-
 void printTransaction(Transaction* transaction, int bucket_index, int bucket);
-void printTransactionList(TransactionLinkedList* transactionLinkedList,
+void printTransactionList(LinkedList* transactionLinkedList,
         int bucket_index, int bucket);
 void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize);
 void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize);
@@ -52,8 +41,6 @@ Date* initializeDate(char* dateString);
 
 Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
                                    int value, char* date, char* time);
-TransactionNode* initializeTransactionNode(Transaction* transaction);
-TransactionLinkedList* initializeTransactionLinkedList(TransactionNode* transactionNode);
 void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
                                   char* keyToHash, int hashTableSize, int walletIDType);
 

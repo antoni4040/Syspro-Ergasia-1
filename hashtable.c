@@ -3,14 +3,19 @@
 #include "hashtable.h"
 #include <stdio.h>
 
-// Create a bucket and return it:
+// Create a bucket and return it. A bucket consists of generic pointers.
+// The last void pointer points to the next bucket if it exists, otherwise it's
+// NULL. The one before that is used as a counter. Even though it's a pointer,
+// we treat it as a long int.
 Bucket* initializeBucket(size_t bucketSize)
 {
     Bucket* bucket = malloc(bucketSize);
-    for(int i = 0; i < bucketSize / sizeof(void*); i++)
+    long int numOfEntries = bucketSize / sizeof(void*);
+    for(int i = 0; i < numOfEntries; i++)
     {
         bucket[i] = NULL;
     }
+    bucket[numOfEntries - 2] = (void*)0;
     return bucket;
 }
 
@@ -28,27 +33,23 @@ int checkBucketHasNext(Bucket* bucket, size_t bucketSize)
 }
 
 // Find the first empty place in a bucket and insert an item, or create a new
-// bucket and insert it there.
+// bucket and insert it there:
 void insertToBucket(Bucket* bucket, void* item, size_t bucketSize)
 {
-    int currentIndex = 0;
-    void* currentPointer = bucket[currentIndex];
-    // Go through all the pointers in the bucket to find an empty place:
-    while(currentPointer != NULL)
-    {
-        currentIndex++;
-        currentPointer = bucket[currentIndex];
-    }
-    // If we've reached the last position, then we have to create a new bucket:
-    if(currentIndex == (bucketSize / sizeof(void*)) - 1)
+    long int numOfEntries = bucketSize / sizeof(void*);
+    long int counter = (long int)bucket[numOfEntries - 2];
+
+    // Check from counter if bucket is full:
+    if(counter == numOfEntries - 2)
     {
         Bucket* newBucket = initializeBucket(bucketSize);
-        bucket[currentIndex] = (void*)newBucket;
-        insertToBucket((void*)bucket[currentIndex], item, bucketSize);
+        bucket[numOfEntries - 1] = (void*)newBucket;
+        insertToBucket((void*)bucket[numOfEntries - 1], item, bucketSize);
     }
     else
     {
-        bucket[currentIndex] = item;
+        bucket[counter] = item;
+        bucket[numOfEntries - 2] = (void*)(counter + 1);
     }
 }
 
@@ -61,7 +62,6 @@ HashTable* initializeHashTable(int hashTableSize, size_t bucketSize)
     {
         hashTable->buckets[i] = initializeBucket(bucketSize);
     }
-    printf("mallocdonesdf\n");
     hashTable->size = hashTableSize;
     hashTable->bucketSize = bucketSize;
     return hashTable;

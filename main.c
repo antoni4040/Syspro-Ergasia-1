@@ -68,17 +68,21 @@ int main(int argc, char **argv)
         printf("all good\n");
     }
 
-    printf("\nasdfsdfssdlf\n");
     // Create sender hash table:
-    printf("%i %i\n", senderHashtableNumOfEntries, bucketSize);
     HashTable* senderHashTable = initializeHashTable(senderHashtableNumOfEntries, bucketSize);
+    // Create receiver hash table:
     HashTable* receiverHashTable = initializeHashTable(receiverHashtableNumOfEntries, bucketSize);
 
-    printf("\nasdlf\n");
+    HashTable* bitcoinHashTable;
+    HashTable* walletHashTable;
+
+    // Read the wallet and bitcoin IDs:
+    readBitcoinBalancesFile(bitCoinBalancesFile, walletHashTable,
+        bitcoinHashTable, bucketSize, bitCoinValue);
+
     // Read the transactions file and setup the hash tables:
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries);
-
 
     return 0;
 }

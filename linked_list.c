@@ -1,8 +1,9 @@
 #include "linked_list.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // Create a new linked list node with a given item:
-Node* initializeTransactionNode(void* item)
+Node* initializeNode(void* item)
 {
     Node* newNode = malloc(sizeof(Node));
     newNode->item = item;
@@ -11,7 +12,7 @@ Node* initializeTransactionNode(void* item)
 }
 
 // Create a new linked list and simply set the head and tail to the given node:
-LinkedList* initializeTransactionLinkedList(Node* node)
+LinkedList* initializeLinkedList(Node* node)
 {
     LinkedList* newLinkedList = malloc(sizeof(LinkedList));
     newLinkedList->head = node;

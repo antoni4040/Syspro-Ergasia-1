@@ -1,6 +1,5 @@
 // Created by Antonis Karvelas.
 // This is where it all begins...
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,6 +16,8 @@ int main(int argc, char **argv)
     int senderHashtableNumOfEntries = -1;
     int receiverHashtableNumOfEntries = -1;
     int bucketSize = -1;
+
+    time_t latestTransactionTime = 0;
 
     // Read through the command line arguments:
     for(int i = 0; i < argc; i++)

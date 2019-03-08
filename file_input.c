@@ -85,21 +85,23 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHash
         while(token)
         {
             bitcoinID = atoi(token);
-            BitcoinNode* newBitcoinNode = initializeBitcoin(NULL, bitcoinValue);
+            BitcoinNode* newBitcoinNode = initializeBitcoin(NULL, newWallet, bitcoinValue);
             BitcoinRoot* newBitcoinRoot = initializeBitcoinRoot(bitcoinID, newBitcoinNode);
-            Node* newBitcoinListNode = initializeNode(newBitcoinNode);
+            Node* newBitcoinListNode = initializeNode(newBitcoinRoot);
 
             // If it's the first bitcoin ID, create a linked list in the wallet:
             if(createLList == 0)
             {
                 LinkedList* newLinkedList = initializeLinkedList(newBitcoinListNode);
                 newWallet->bitcoins = newLinkedList;
+                newWallet->balance = bitcoinValue;
                 createLList++;
             }
             // Else, append the new bitcoin ID to the existing linked list in the wallet:
             else
             {
                 appendToLinkedList(newWallet->bitcoins, newBitcoinListNode);
+                newWallet->balance += bitcoinValue;
             }
 
             inserted = insertToBitcoinHashTable(bitcoinHashTable, newBitcoinRoot,

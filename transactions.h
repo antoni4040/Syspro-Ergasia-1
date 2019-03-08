@@ -3,31 +3,19 @@
 
 #ifndef ERGASIA_1_TRANSACTIONS_H
 #define ERGASIA_1_TRANSACTIONS_H
-
+#define _XOPEN_SOURCE 700
 #include "hashtable.h"
 #include "linked_list.h"
-
-typedef struct Date
-{
-    int day;
-    int month;
-    int year;
-} Date;
-
-typedef struct Time
-{
-    int hour;
-    int minute;
-}Time;
+#include "wallets.h"
+#include <time.h>
 
 typedef struct Transaction
 {
     int transactionID;
-    char* senderWalletID;
-    char* receiverWalletID;
+    Wallet* senderWalletID;
+    Wallet* receiverWalletID;
     int value;
-    Date* date;
-    Time* time;
+    time_t datetime;
 } Transaction;
 
 void printTransaction(Transaction* transaction, int bucket_index, int bucket);
@@ -36,12 +24,11 @@ void printTransactionList(LinkedList* transactionLinkedList,
 void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize);
 void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize);
 
-Time* initializeTime(char* timeString);
-Date* initializeDate(char* dateString);
-
 Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
-                                   int value, char* date, char* time);
+        int value, char* date, char* _time);
 void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
                                   char* keyToHash, int hashTableSize, int walletIDType);
+int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
+    int walletHashTableSize, int bitcoinValue,time_t latestTransactionTime);
 
 #endif //ERGASIA_1_TRANSACTIONS_H

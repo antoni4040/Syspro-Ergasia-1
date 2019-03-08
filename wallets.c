@@ -2,11 +2,12 @@
 #include <string.h>
 
 // Create a leaf bitcoin node:
-BitcoinNode* initializeBitcoin(Transaction* transaction, int quantity)
+BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int quantity)
 {
     BitcoinNode* bitcoinNode = malloc(sizeof(BitcoinNode));
     bitcoinNode->quantity = quantity;
     bitcoinNode->transaction = transaction;
+    bitcoinNode->wallet = wallet;
     bitcoinNode->child_a = NULL;
     bitcoinNode->child_b = NULL;
     return bitcoinNode;
@@ -85,13 +86,14 @@ Wallet* initializeWallet(char* walletID)
     newWallet->walletID = malloc(strlen(walletID) * sizeof(char));
     strcpy(newWallet->walletID, walletID);
     newWallet->bitcoins = malloc(sizeof(LinkedList));
+    newWallet->balance = 0;
     return newWallet;
 }
 
-// Return 1 if wallet found in bucket or -1 if it's not there:
-int checkWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize)
+// Return wallet in bucket or NULL if it's not found:
+Wallet* findWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize)
 {
-    int found = -1;
+    Wallet* found = NULL;
     for(int i = 0; i < (bucketSize / sizeof(void*)) - 2; i++)
     {
         if(bucket[i] == NULL)
@@ -100,13 +102,14 @@ int checkWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize)
         {
             if (strcmp(((Wallet*)(bucket[i]))->walletID, walletID) == 0)
             {
-                found = 1;
+                found = (Wallet*)(bucket[i]);
                 break;
             }
         }
     }
     return found;
 }
+
 
 // Add a new wallet to the wallet hash table.
 // Return 0 if this can be done, -1 if it's already in the hash table:
@@ -118,17 +121,17 @@ int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
     // Go through buckets and see if a list exists:
     size_t bucketSize = hashTable->bucketSize;
     Bucket* bucketToInsert = hashTable->buckets[index];
-    int found = -1;
+    Wallet* found = NULL;
     do
     {
-        found = checkWalletInBucket(keyToHash, bucketToInsert, bucketSize);
-        if(found != -1)
+        found = findWalletInBucket(keyToHash, bucketToInsert, bucketSize);
+        if(found)
             break;
         bucketToInsert = (Bucket*)bucketToInsert[(bucketSize / sizeof(void*)) - 1];
     }while(bucketToInsert != NULL);
 
     // If wallet is not found, we can add it to the hash table:
-    if(found == -1)
+    if(!found)
     {
         bucketToInsert = hashTable->buckets[index];
         while(bucketToInsert[(bucketSize / sizeof(void*)) - 1] != NULL)
@@ -143,4 +146,67 @@ int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
         return -1;
     }
 
+}
+
+// Return the wallet in the hashtable, NULL if it's not found:
+Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID, int hashTableSize)
+{
+    int index = hash_function(walletID, hashTableSize);
+
+    // Go through buckets and see if a list exists:
+    size_t bucketSize = hashTable->bucketSize;
+    Bucket* bucket = hashTable->buckets[index];
+    Wallet* wallet = NULL;
+    do
+    {
+        wallet = findWalletInBucket(walletID, bucket, bucketSize);
+        if(wallet)
+            break;
+        bucket = (Bucket*)bucket[(bucketSize / sizeof(void*)) - 1];
+    }while(bucket != NULL);
+
+    return wallet;
+}
+
+// Add the new transaction to the tree and return the amount that belongs to the sender:
+int TreeDFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount)
+{
+    Wallet* sender = transaction->senderWalletID;
+    Wallet* receiver = transaction->receiverWalletID;
+    Node* firstNode = initializeNode(bitcoin->rootNode);
+    LinkedList* visited = initializeLinkedList(firstNode);
+    while(visited->head)
+    {
+        Node* node = popStart(visited);
+        BitcoinNode* bitcoinNode = (BitcoinNode*)(node->item);
+        // If bitcoin is a leaf node:
+        if((bitcoinNode->child_a == NULL) && (bitcoinNode->child_b == NULL))
+        {
+            if(bitcoinNode->wallet == sender)
+            {
+                if(bitcoinNode->quantity <= amount)
+                {
+                    BitcoinNode* a = initializeBitcoin(transaction, receiver, bitcoinNode->quantity);
+                    BitcoinNode* b = initializeBitcoin(transaction, sender, 0);
+                    amount -= bitcoinNode->quantity;
+                }
+                else
+                {
+                    BitcoinNode* a = initializeBitcoin(transaction, receiver, amount);
+                    BitcoinNode* b = initializeBitcoin(transaction,
+                        sender, bitcoinNode->quantity - amount);
+                    amount = 0;
+                }
+            }
+        }
+        else
+        {
+            Node* nodeA = initializeNode(((BitcoinNode*)(node->item))->child_a);
+            Node* nodeB = initializeNode(((BitcoinNode*)(node->item))->child_b);
+            appendToLinkedList(visited, nodeA);
+            appendToLinkedList(visited, nodeB);
+        }
+        if(amount == 0)
+            break;
+    }
 }

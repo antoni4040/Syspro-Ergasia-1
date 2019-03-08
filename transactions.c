@@ -1,12 +1,14 @@
 #include "transactions.h"
+#include "wallets.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 void printTransaction(Transaction* transaction, int bucket_index, int bucket)
 {
-    printf("%i %s %s %i bucket_index %i bucket %i\n", transaction->transactionID, transaction->senderWalletID,
-            transaction->receiverWalletID, transaction->value, bucket_index, bucket);
+    printf("%i %s %s %i %s bucket_index %i bucket %i\n", transaction->transactionID,
+        transaction->senderWalletID, transaction->receiverWalletID, transaction->value,
+        asctime(localtime(&transaction->datetime)),bucket_index, bucket);
 }
 
 void printTransactionList(LinkedList* transactionLinkedList,
@@ -45,28 +47,9 @@ void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t b
     }
 }
 
-// Create a new time struct from a string:
-Time* initializeTime(char* timeString)
-{
-    Time* newTime = malloc(sizeof(Time));
-    newTime->hour = atoi(strtok(timeString, ":"));
-    newTime->minute = atoi(strtok(NULL, "-"));
-    return newTime;
-}
-
-// Create a new date struct from a string:
-Date* initializeDate(char* dateString)
-{
-    Date* newDate = malloc(sizeof(Date));
-    newDate->day =  atoi(strtok(dateString, "-"));
-    newDate->month =  atoi(strtok(NULL, "-"));
-    newDate->year =  atoi(strtok(NULL, " "));
-    return newDate;
-}
-
 // Create a transaction:
 Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
-        int value, char* date, char* time)
+        int value, char* date, char* _time)
 {
     Transaction* newTransaction = malloc(sizeof(Transaction));
     newTransaction->transactionID = transactionID;
@@ -75,8 +58,15 @@ Transaction* initializeTransaction(int transactionID, char* senderWallet, char* 
     newTransaction->receiverWalletID = malloc(strlen(receiverWallet) * sizeof(char));
     strcpy(newTransaction->receiverWalletID, receiverWallet);
     newTransaction->value = value;
-    newTransaction->date = initializeDate(date);
-    newTransaction->time = initializeTime(time);
+
+    // Convert date and time into timestamp. Much easier to handle:
+    struct tm timestruct;
+    char datetime[30];
+    strcpy(datetime, date);
+    strcat(datetime, _time);
+    strptime(datetime, "%d-%m-%Y%H:%M", &timestruct);
+    newTransaction->datetime = mktime(&timestruct);
+
     return newTransaction;
 }
 
@@ -143,4 +133,46 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
         appendToLinkedList((LinkedList*)bucketToInsert[position], newTransactionNode);
     }
 
+}
+
+// Check if the requested transaction is possible and do it. Engage.
+int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
+    int walletHashTableSize, int bitcoinValue, time_t latestTransactionTime)
+{
+    char* sender = transaction->senderWalletID;
+    char* receiver = transaction->receiverWalletID;
+    int amount = transaction->value;
+
+    // Check sender and receiver are different:
+    if(strcmp(sender, receiver) == 0)
+    {
+        fprintf(stderr, "Sender and receiver can't be the same. What is this, money laundering?\n");
+        return 1;
+    }
+
+    // Check transaction date:
+    if(latestTransactionTime >= transaction->datetime)
+    {
+        fprintf(stderr, "Date-time error. Do you have a TARDIS or something?\n");
+        return 1;
+    }
+
+    // Check sender has enough money:
+    Wallet* senderWallet = findWalletInHashTable(walletHashTable, sender, walletHashTableSize);
+    Wallet* receiverWallet = findWalletInHashTable(walletHashTable, receiver, walletHashTableSize);
+    if(amount > senderWallet->balance)
+    {
+        fprintf(stderr, "Sender wallet doesn't have enough money. Just like me, actually...\n");
+        return 1;
+    }
+
+    // If amount is larger that bitcoin value, take the first bitcoin from the
+    // linked list in the sender and add it to the receiver:
+    while(amount >= bitcoinValue)
+    {
+        Node* bitcoinNodeToTake = senderWallet->bitcoins->head;
+        senderWallet->bitcoins->head = bitcoinNodeToTake->next;
+        BitcoinNode* bitcoinToTake = ((BitcoinRoot*)(bitcoinNodeToTake->item))->rootNode;
+        // Have to go through the God-damn tree:
+    }
 }

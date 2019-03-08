@@ -26,3 +26,18 @@ void appendToLinkedList(LinkedList* linkedList, Node* node)
     linkedList->tail->next = node;
     linkedList->tail = node;
 }
+
+// Add an item to the beginning of the linked list:
+void prependToLinkedList(LinkedList* linkedList, Node* node)
+{
+    node->next = linkedList->head;
+    linkedList->head = node;
+}
+
+// Pop a node from the beginning of the list:
+Node* popStart(LinkedList* linkedList)
+{
+    Node* node = linkedList->head;
+    linkedList->head = linkedList->head->next;
+    return node;
+}

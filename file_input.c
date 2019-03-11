@@ -7,10 +7,10 @@
 #include "transactions.h"
 #include "wallets.h"
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 1024
 
-int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHashTable,
-        HashTable* bitcoinHashTable, size_t bucketSize, int bitcoinValue)
+int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHashTable,
+        HashTable** bitcoinHashTable, size_t bucketSize, int bitcoinValue)
 {
     FILE* bitcoinBalancesFile = fopen(bitcoinBalancesFileName, "r");
 
@@ -58,8 +58,8 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHash
         bitcoinHashTableNumOfEntries = minValue;
 
     // Initialize the hash tables with the number of buckets we calculated above:
-    walletHashTable = initializeHashTable(walletHashTableNumOfEntries, bucketSize);
-    bitcoinHashTable = initializeHashTable(bitcoinHashTableNumOfEntries, bucketSize);
+    *walletHashTable = initializeHashTable(walletHashTableNumOfEntries, bucketSize);
+    *bitcoinHashTable = initializeHashTable(bitcoinHashTableNumOfEntries, bucketSize);
 
     // Go back to beginning of file:
     rewind(bitcoinBalancesFile);
@@ -70,7 +70,7 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHash
         // Get the wallet:
         walletID = strtok(buffer, " ");
         Wallet* newWallet = initializeWallet(walletID);
-        inserted = insertToWalletHashTable(walletHashTable, newWallet,
+        inserted = insertToWalletHashTable(*walletHashTable, newWallet,
             walletID, walletHashTableNumOfEntries);
 
         // If wallet already in hash table:
@@ -104,7 +104,7 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHash
                 newWallet->balance += bitcoinValue;
             }
 
-            inserted = insertToBitcoinHashTable(bitcoinHashTable, newBitcoinRoot,
+            inserted = insertToBitcoinHashTable(*bitcoinHashTable, newBitcoinRoot,
             token, bitcoinHashTableNumOfEntries);
 
             // If bitcoin already in hash table:
@@ -121,13 +121,14 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable* walletHash
 }
 
 void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
-        HashTable* receiverHashTable, int senderHashTableSize, int receiverHashTableSize)
+        HashTable* receiverHashTable, HashTable* walletHashTable,
+        int senderHashTableSize, int receiverHashTableSize)
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
 
     int transactionID;
-    char* senderWallet;
-    char* receiverWallet;
+    char* sender;
+    char* receiver;
     int value;
     char* date;
     char* time;
@@ -142,14 +143,26 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
     char buffer[BUFFER_SIZE];
     while (fgets(buffer, sizeof(buffer), transactionFile)) {
         transactionID = atoi(strtok(buffer, " "));
-        senderWallet = strtok(NULL, " ");
-        receiverWallet = strtok(NULL, " ");
+        sender = strtok(NULL, " ");
+        receiver = strtok(NULL, " ");
         value = atoi(strtok(NULL, " "));
         date = strtok(NULL, " ");
         time = strtok(NULL, " ");
+        Wallet* senderWallet = findWalletInHashTable(walletHashTable, sender);
+        Wallet* receiverWallet = findWalletInHashTable(walletHashTable, receiver);
+        if(senderWallet == NULL)
+        {
+            fprintf(stderr, "Haven't seen this WalletID before. %s Who's this?\n", sender);
+            continue;
+        }
+        if(receiverWallet == NULL)
+        {
+            fprintf(stderr, "Haven't seen this WalletID before. %s Who's this?\n", receiver);
+            continue;
+        }
         Transaction* newTransaction = initializeTransaction(transactionID, senderWallet, receiverWallet, value, date, time);
-        insertToTransactionHashTable(senderHashTable, newTransaction, senderWallet, senderHashTableSize, 1);
-        insertToTransactionHashTable(receiverHashTable, newTransaction, receiverWallet, receiverHashTableSize, 0);
+        insertToTransactionHashTable(senderHashTable, newTransaction, sender, senderHashTableSize, 1);
+        insertToTransactionHashTable(receiverHashTable, newTransaction, receiver, receiverHashTableSize, 0);
     }
 
     printTransactionHashTable(senderHashTable, senderHashTableSize, senderHashTable->bucketSize);

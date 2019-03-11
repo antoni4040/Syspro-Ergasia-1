@@ -7,7 +7,8 @@
 void printTransaction(Transaction* transaction, int bucket_index, int bucket)
 {
     printf("%i %s %s %i %s bucket_index %i bucket %i\n", transaction->transactionID,
-        transaction->senderWalletID, transaction->receiverWalletID, transaction->value,
+        transaction->senderWalletID->walletID,
+        transaction->receiverWalletID->walletID, transaction->value,
         asctime(localtime(&transaction->datetime)),bucket_index, bucket);
 }
 
@@ -48,15 +49,13 @@ void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t b
 }
 
 // Create a transaction:
-Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
-        int value, char* date, char* _time)
+Transaction* initializeTransaction(int transactionID, Wallet* senderWallet,
+        Wallet* receiverWallet, int value, char* date, char* _time)
 {
     Transaction* newTransaction = malloc(sizeof(Transaction));
     newTransaction->transactionID = transactionID;
-    newTransaction->senderWalletID = malloc(strlen(senderWallet) * sizeof(char));
-    strcpy(newTransaction->senderWalletID, senderWallet);
-    newTransaction->receiverWalletID = malloc(strlen(receiverWallet) * sizeof(char));
-    strcpy(newTransaction->receiverWalletID, receiverWallet);
+    newTransaction->senderWalletID = senderWallet;
+    newTransaction->receiverWalletID = receiverWallet;
     newTransaction->value = value;
 
     // Convert date and time into timestamp. Much easier to handle:
@@ -81,14 +80,15 @@ int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int
         // Wallet type 1 for sender, 0 for receiver:
         if(walletType == 1)
         {
-            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->senderWalletID, walletID) == 0) {
+            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->senderWalletID->walletID, walletID) == 0) {
                 found = i;
                 break;
             }
         }
         else
         {
-            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->receiverWalletID, walletID) == 0) {
+            // printf("%li\n", ((Transaction*)(((LinkedList*)bucket[i])->head->item))->receiverWalletID);
+            if (strcmp(((Transaction*)(((LinkedList*)bucket[i])->head->item))->receiverWalletID->walletID, walletID) == 0) {
                 found = i;
                 break;
             }
@@ -139,12 +139,12 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     int walletHashTableSize, int bitcoinValue, time_t latestTransactionTime)
 {
-    char* sender = transaction->senderWalletID;
-    char* receiver = transaction->receiverWalletID;
+    Wallet* sender = transaction->senderWalletID;
+    Wallet* receiver = transaction->receiverWalletID;
     int amount = transaction->value;
 
     // Check sender and receiver are different:
-    if(strcmp(sender, receiver) == 0)
+    if(sender == receiver)
     {
         fprintf(stderr, "Sender and receiver can't be the same. What is this, money laundering?\n");
         return 1;
@@ -158,9 +158,7 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     }
 
     // Check sender has enough money:
-    Wallet* senderWallet = findWalletInHashTable(walletHashTable, sender, walletHashTableSize);
-    Wallet* receiverWallet = findWalletInHashTable(walletHashTable, receiver, walletHashTableSize);
-    if(amount > senderWallet->balance)
+    if(amount > sender->balance)
     {
         fprintf(stderr, "Sender wallet doesn't have enough money. Just like me, actually...\n");
         return 1;
@@ -170,8 +168,8 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     // linked list in the sender and add it to the receiver:
     while(amount >= bitcoinValue)
     {
-        Node* bitcoinNodeToTake = senderWallet->bitcoins->head;
-        senderWallet->bitcoins->head = bitcoinNodeToTake->next;
+        Node* bitcoinNodeToTake = sender->bitcoins->head;
+        sender->bitcoins->head = bitcoinNodeToTake->next;
         BitcoinNode* bitcoinToTake = ((BitcoinRoot*)(bitcoinNodeToTake->item))->rootNode;
         // Have to go through the God-damn tree:
     }

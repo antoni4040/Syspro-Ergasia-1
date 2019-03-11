@@ -83,7 +83,7 @@ int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
 Wallet* initializeWallet(char* walletID)
 {
     Wallet* newWallet = malloc(sizeof(Wallet));
-    newWallet->walletID = malloc(strlen(walletID) * sizeof(char));
+    newWallet->walletID = malloc((strlen(walletID) * sizeof(char))+1);
     strcpy(newWallet->walletID, walletID);
     newWallet->bitcoins = malloc(sizeof(LinkedList));
     newWallet->balance = 0;
@@ -149,8 +149,9 @@ int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
 }
 
 // Return the wallet in the hashtable, NULL if it's not found:
-Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID, int hashTableSize)
+Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID)
 {
+    int hashTableSize = hashTable->size;
     int index = hash_function(walletID, hashTableSize);
 
     // Go through buckets and see if a list exists:
@@ -169,7 +170,7 @@ Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID, int hashTabl
 }
 
 // Add the new transaction to the tree and return the amount that belongs to the sender:
-int TreeDFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount)
+int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount)
 {
     Wallet* sender = transaction->senderWalletID;
     Wallet* receiver = transaction->receiverWalletID;

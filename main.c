@@ -78,11 +78,11 @@ int main(int argc, char **argv)
     HashTable* walletHashTable;
 
     // Read the wallet and bitcoin IDs:
-    readBitcoinBalancesFile(bitCoinBalancesFile, walletHashTable,
-        bitcoinHashTable, bucketSize, bitCoinValue);
+    readBitcoinBalancesFile(bitCoinBalancesFile, &walletHashTable,
+        &bitcoinHashTable, bucketSize, bitCoinValue);
 
     // Read the transactions file and setup the hash tables:
-    readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable,
+    readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable, walletHashTable,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries);
 
     return 0;

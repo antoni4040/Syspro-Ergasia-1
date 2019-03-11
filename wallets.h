@@ -3,6 +3,8 @@
 #include "transactions.h"
 #include "hashtable.h"
 
+typedef struct Transaction Transaction;
+
 typedef struct Wallet
 {
     char* walletID;
@@ -35,5 +37,5 @@ Wallet* initializeWallet(char* walletID);
 Wallet* findWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize);
 int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
         char* keyToHash, int hashTableSize);
-Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID, int hashTableSize);
+Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID);
 #endif //ERGASIA_1_FILE_WALLETS_H

@@ -9,6 +9,8 @@
 #include "wallets.h"
 #include <time.h>
 
+typedef struct Wallet Wallet;
+
 typedef struct Transaction
 {
     int transactionID;
@@ -24,8 +26,8 @@ void printTransactionList(LinkedList* transactionLinkedList,
 void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize);
 void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize);
 
-Transaction* initializeTransaction(int transactionID, char* senderWallet, char* receiverWallet,
-        int value, char* date, char* _time);
+Transaction* initializeTransaction(int transactionID, Wallet* senderWallet,
+        Wallet* receiverWallet, int value, char* date, char* _time);
 void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
                                   char* keyToHash, int hashTableSize, int walletIDType);
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,

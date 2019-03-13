@@ -184,22 +184,20 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     // If amount is greater than the bitcoin value, take the first bitcoin from the
     // linked list in the sender and add it to the receiver:
     Node* bitcoinNodeToTake = sender->bitcoins->head;
-    Node* next = bitcoinNodeToTake;
-    Node** previous = NULL;
     while(amount > 0)
     {
-        BitcoinRoot* bitcoinToTake = ((BitcoinRoot*)(bitcoinNodeToTake->item));
-        // printf("%i\n", bitcoinToTake->bitcoinID);
+        BitcoinRoot* bitcoinToTake = (BitcoinRoot*)(bitcoinNodeToTake->item);
+        printf("%i\n", bitcoinToTake->bitcoinID);
         // Have to go through the God-damn tree:
         int amountGained = TreeBFSTransaction(bitcoinToTake, transaction, amount);
-        // printf("Gained: %i\n", amountGained);
+        printf("Gained: %i\n", amountGained);
         amount -= amountGained;
         // Check to see whether bitcoin already in receiver:
         Node* node = receiver->bitcoins->head;
         int found = 0;
         while(node != NULL)
         {
-            if(((BitcoinRoot*)(node))->bitcoinID == bitcoinToTake->bitcoinID)
+            if(((BitcoinRoot*)(node->item))->bitcoinID == bitcoinToTake->bitcoinID)
             {
                 found = 1;
                 break;
@@ -207,41 +205,39 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
             node = node->next;
         }
 
+        if(found == 0)
+        {
+            Node* newNode = initializeNode(bitcoinToTake);
+            appendToLinkedList(receiver->bitcoins, newNode);
+        }
+
         // If we don't get anything from this bitcoin, then the wallet no longer
         // has any portion of this bitcoin. Let's remove it:
         if(amountGained == 0)
         {
-            if(sender->bitcoins->head == bitcoinNodeToTake)
+            free(sender->bitcoins->head);
+            if(sender->bitcoins->head->next == NULL)
             {
-                Node** firstNode = &(sender->bitcoins->head);
-                if(sender->bitcoins->tail == bitcoinNodeToTake)
-                {
-                    sender->bitcoins->head = NULL;
-                    sender->bitcoins->tail = NULL;
-                }
-                else
-                {
-                    sender->bitcoins->head = sender->bitcoins->head->next;
-                }
-                free(*firstNode);
+                sender->bitcoins->head = NULL;
+                sender->bitcoins->tail = NULL;
             }
             else
             {
-                free((*previous)->next);
-                (*previous)->next = bitcoinNodeToTake->next;
+                sender->bitcoins->head = sender->bitcoins->head->next;
             }
+            // else if(sender->bitcoins->tail == *bitcoinNodeToTake)
+            // {
+            //     sender->bitcoins->tail = *previous;
+            //     (*previous)->next = NULL;
+            // }
+            // else
+            // {
+            //     (*previous)->next = (*bitcoinNodeToTake)->next;
+            // }
         }
 
-        Node* next = bitcoinNodeToTake->next;
-        previous = &bitcoinNodeToTake;
 
-        bitcoinNodeToTake = next;
-
-        if(found == 1)
-            continue;
-
-        Node* newNode = initializeNode(bitcoinToTake);
-        appendToLinkedList(receiver->bitcoins, newNode);
+        bitcoinNodeToTake = bitcoinNodeToTake->next;
     }
 
     printf("After:\n");

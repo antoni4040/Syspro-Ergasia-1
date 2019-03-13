@@ -6,6 +6,7 @@
 #include "verification.h"
 #include "transactions.h"
 #include "file_input.h"
+#include "commands.h"
 
 int main(int argc, char **argv)
 {
@@ -86,5 +87,6 @@ int main(int argc, char **argv)
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable, walletHashTable,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries, bitCoinValue, &latestTransactionTime);
 
+    commandLine(senderHashTable, receiverHashTable, walletHashTable);
     return 0;
 }

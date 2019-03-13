@@ -13,24 +13,24 @@ typedef struct Wallet Wallet;
 
 typedef struct Transaction
 {
-    int transactionID;
+    char* transactionID;
     Wallet* senderWalletID;
     Wallet* receiverWalletID;
     int value;
     time_t datetime;
 } Transaction;
 
-void printTransaction(Transaction* transaction, int bucket_index, int bucket);
-void printTransactionList(LinkedList* transactionLinkedList,
-        int bucket_index, int bucket);
+void printTransaction(Transaction* transaction);
+void printTransactionList(LinkedList* transactionLinkedList);
 void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize);
 void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize);
 
-Transaction* initializeTransaction(int transactionID, Wallet* senderWallet,
+Transaction* initializeTransaction(char* transactionID, Wallet* senderWallet,
         Wallet* receiverWallet, int value, char* date, char* _time);
 void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
-                                  char* keyToHash, int hashTableSize, int walletIDType);
+    char* keyToHash, int walletIDType);
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
-    int walletHashTableSize, int bitcoinValue,time_t latestTransactionTime);
+    HashTable* senderHashTable, HashTable* receiverHashTable,
+    int bitcoinValue, time_t* latestTransactionTime);
 
 #endif //ERGASIA_1_TRANSACTIONS_H

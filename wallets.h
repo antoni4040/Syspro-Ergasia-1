@@ -27,6 +27,8 @@ typedef struct BitcoinRoot
     BitcoinNode* rootNode;
 } BitcoinRoot;
 
+void printWallet(Wallet* wallet);
+
 BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int quantity);
 BitcoinRoot* initializeBitcoinRoot(int bitcoinID, BitcoinNode* bitcoinNode);
 int checkBitcoinInBucket(int bitcoinID, Bucket* bucket, size_t bucketSize);
@@ -38,4 +40,5 @@ Wallet* findWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize);
 int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
         char* keyToHash, int hashTableSize);
 Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID);
+int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount);
 #endif //ERGASIA_1_FILE_WALLETS_H

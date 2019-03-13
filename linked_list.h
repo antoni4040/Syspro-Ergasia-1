@@ -21,6 +21,6 @@ typedef struct LinkedList
 Node* initializeNode(void* item);
 LinkedList* initializeLinkedList(Node* node);
 void appendToLinkedList(LinkedList* linkedList, Node* node);
-void prependToLinkedList(LinkedList* linkedList, Node* node);
 Node* popStart(LinkedList* linkedList);
+void freeLinkedList(LinkedList* linkedList);
 #endif //ERGASIA_1_LINKEDLIST_H

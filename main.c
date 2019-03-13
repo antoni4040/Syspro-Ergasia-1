@@ -10,14 +10,15 @@
 int main(int argc, char **argv)
 {
     // Initial command line parameters:
-    int bitCoinValue = -1;
+    unsigned long int bitCoinValue = 0;
     char* bitCoinBalancesFile = NULL;
     char* transactionsFile = NULL;
-    int senderHashtableNumOfEntries = -1;
-    int receiverHashtableNumOfEntries = -1;
-    int bucketSize = -1;
+    unsigned long int senderHashtableNumOfEntries = 0;
+    unsigned long int receiverHashtableNumOfEntries = 0;
+    unsigned long int bucketSize = 0;
 
     time_t latestTransactionTime = 0;
+    unsigned long int latestTransactionID = 0;
 
     // Read through the command line arguments:
     for(int i = 0; i < argc; i++)
@@ -40,25 +41,25 @@ int main(int argc, char **argv)
         else if(strcmp(argv[i], "-v") == 0)
         {
             i++;
-            bitCoinValue = atoi(argv[i]);
+            bitCoinValue = strtoul(argv[i], NULL, 10);
         }
         // Get number of entries for sender hash-table:
         else if(strcmp(argv[i], "-h1") == 0)
         {
             i++;
-            senderHashtableNumOfEntries = atoi(argv[i]);
+            senderHashtableNumOfEntries = strtoul(argv[i], NULL, 10);
         }
         // Get number of entries for receiver hash-table:
         else if(strcmp(argv[i], "-h2") == 0)
         {
             i++;
-            receiverHashtableNumOfEntries = atoi(argv[i]);
+            receiverHashtableNumOfEntries = strtoul(argv[i], NULL, 10);
         }
         // Get bucket size:
         else if(strcmp(argv[i], "-b") == 0)
         {
             i++;
-            bucketSize = atoi(argv[i]);
+            bucketSize = strtoul(argv[i], NULL, 10);
         }
     }
 
@@ -66,7 +67,7 @@ int main(int argc, char **argv)
     if(allParametersGiven(bitCoinValue, bitCoinBalancesFile, transactionsFile,
             senderHashtableNumOfEntries, receiverHashtableNumOfEntries, bucketSize))
     {
-        printf("all good\n");
+        printf("All parameters good. Begin transactions.\n");
     }
 
     // Create sender hash table:
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
 
     // Read the transactions file and setup the hash tables:
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable, walletHashTable,
-            senderHashtableNumOfEntries, receiverHashtableNumOfEntries);
+            senderHashtableNumOfEntries, receiverHashtableNumOfEntries, bitCoinValue, &latestTransactionTime);
 
     return 0;
 }

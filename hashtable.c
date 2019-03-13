@@ -68,9 +68,9 @@ HashTable* initializeHashTable(int hashTableSize, size_t bucketSize)
 }
 
 // Hash a given string an return an index:
-unsigned int hash_function(char* string, int max)
+unsigned long int hash_function(char* string, int max)
 {
-    int hash_value = 0;
+    unsigned long int hash_value = 0;
     for(int i = 0; i < strlen(string); i++)
     {
         hash_value += string[i];

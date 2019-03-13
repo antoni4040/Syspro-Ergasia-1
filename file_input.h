@@ -6,5 +6,6 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
         HashTable** bitcoinHashTable, size_t bucketSize, int bitcoinValue);
 void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         HashTable* receiverHashTable, HashTable* walletHashTable,
-        int senderHashTableSize, int receiverHashTableSize);
+        int senderHashTableSize, int receiverHashTableSize,
+        int bitcoinValue, time_t* latestTransactionTime);
 #endif //ERGASIA_1_FILE_INPUT_H

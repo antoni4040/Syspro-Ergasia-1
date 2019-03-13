@@ -23,15 +23,16 @@ LinkedList* initializeLinkedList(Node* node)
 // Append item to a linked list:
 void appendToLinkedList(LinkedList* linkedList, Node* node)
 {
-    linkedList->tail->next = node;
-    linkedList->tail = node;
-}
-
-// Add an item to the beginning of the linked list:
-void prependToLinkedList(LinkedList* linkedList, Node* node)
-{
-    node->next = linkedList->head;
-    linkedList->head = node;
+    if(linkedList->head == NULL)
+    {
+        linkedList->head = node;
+        linkedList->tail = node;
+    }
+    else
+    {
+        linkedList->tail->next = node;
+        linkedList->tail = node;
+    }
 }
 
 // Pop a node from the beginning of the list:
@@ -40,4 +41,15 @@ Node* popStart(LinkedList* linkedList)
     Node* node = linkedList->head;
     linkedList->head = linkedList->head->next;
     return node;
+}
+
+// Deallocate memory of a linked list:
+void freeLinkedList(LinkedList* linkedList)
+{
+    Node* node;
+    while((node = linkedList->head) != NULL)
+    {
+        linkedList->head = linkedList->head->next;
+        free(node);
+    }
 }

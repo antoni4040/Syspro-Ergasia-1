@@ -3,9 +3,9 @@
 #include "verification.h"
 
 // Make sure that all the initial command line parameters are given correctly.
-int allParametersGiven(int bitCoinValue, char* bitCoinBalancesFile,
-        char *transactionsFile, int senderHashtableNumOfEntries,
-        int receiverHashtableNumOfEntries, int bucketSize)
+int allParametersGiven(unsigned long int bitCoinValue, char* bitCoinBalancesFile,
+        char *transactionsFile, unsigned long senderHashtableNumOfEntries,
+        unsigned long receiverHashtableNumOfEntries, unsigned long bucketSize)
 {
     if(bitCoinValue != -1 && bitCoinBalancesFile != NULL && transactionsFile != NULL
     && senderHashtableNumOfEntries != -1 && receiverHashtableNumOfEntries != -1 &&

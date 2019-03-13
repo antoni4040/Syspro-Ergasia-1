@@ -32,10 +32,11 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
     }
 
     // Read the file once to get the number of wallets and bitcoins:
-    char buffer[BUFFER_SIZE];
-    while (fgets(buffer, sizeof(buffer), bitcoinBalancesFile))
+    char* line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, bitcoinBalancesFile) != EOF)
     {
-        strtok(buffer, " ");
+        strtok(line, " ");
         numberOfWallets++;
         while(strtok(NULL, " "))
         {
@@ -65,10 +66,10 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
     rewind(bitcoinBalancesFile);
 
     // Read the file a second time and now add the wallets and bitcoins to the hash tables:
-    while (fgets(buffer, sizeof(buffer), bitcoinBalancesFile))
+    while (getline(&line, &len, bitcoinBalancesFile) != EOF)
     {
         // Get the wallet:
-        walletID = strtok(buffer, " ");
+        walletID = strtok(line, " ");
         Wallet* newWallet = initializeWallet(walletID);
         inserted = insertToWalletHashTable(*walletHashTable, newWallet,
             walletID, walletHashTableNumOfEntries);
@@ -115,18 +116,21 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
             }
             token = strtok(NULL, " ");
         }
+        printWallet(newWallet);
     }
 
+    free(line);
     return 0;
 }
 
 void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         HashTable* receiverHashTable, HashTable* walletHashTable,
-        int senderHashTableSize, int receiverHashTableSize)
+        int senderHashTableSize, int receiverHashTableSize,
+        int bitcoinValue, time_t* latestTransactionTime)
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
 
-    int transactionID;
+    char* transactionID;
     char* sender;
     char* receiver;
     int value;
@@ -140,9 +144,10 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
     }
 
     //Start reading the file line by line:
-    char buffer[BUFFER_SIZE];
-    while (fgets(buffer, sizeof(buffer), transactionFile)) {
-        transactionID = atoi(strtok(buffer, " "));
+    char* line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, transactionFile) != EOF) {
+        transactionID = strtok(line, " ");
         sender = strtok(NULL, " ");
         receiver = strtok(NULL, " ");
         value = atoi(strtok(NULL, " "));
@@ -161,9 +166,8 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
             continue;
         }
         Transaction* newTransaction = initializeTransaction(transactionID, senderWallet, receiverWallet, value, date, time);
-        insertToTransactionHashTable(senderHashTable, newTransaction, sender, senderHashTableSize, 1);
-        insertToTransactionHashTable(receiverHashTable, newTransaction, receiver, receiverHashTableSize, 0);
+        requestTransaction(newTransaction, walletHashTable, senderHashTable, receiverHashTable,
+            bitcoinValue, latestTransactionTime);
     }
-
-    printTransactionHashTable(senderHashTable, senderHashTableSize, senderHashTable->bucketSize);
+    free(line);
 }

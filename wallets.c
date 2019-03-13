@@ -1,5 +1,19 @@
 #include "wallets.h"
 #include <string.h>
+#include <stdio.h>
+
+void printWallet(Wallet* wallet)
+{
+    printf("Printing wallet: %s, balance %d\n", wallet->walletID, wallet->balance);
+    Node* node = wallet->bitcoins->head;
+    printf("Bitcoins: ");
+    while(node != NULL)
+    {
+        printf("%i, ", ((BitcoinRoot*)(node->item))->bitcoinID);
+        node = node->next;
+    }
+    printf("\n\n");
+}
 
 // Create a leaf bitcoin node:
 BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int quantity)
@@ -172,42 +186,46 @@ Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID)
 // Add the new transaction to the tree and return the amount that belongs to the sender:
 int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount)
 {
+    int initialAmount = amount;
     Wallet* sender = transaction->senderWalletID;
     Wallet* receiver = transaction->receiverWalletID;
     Node* firstNode = initializeNode(bitcoin->rootNode);
-    LinkedList* visited = initializeLinkedList(firstNode);
-    while(visited->head)
+    LinkedList* toVisit = initializeLinkedList(firstNode);
+    while(toVisit->head != NULL)
     {
-        Node* node = popStart(visited);
+        Node* node = popStart(toVisit);
         BitcoinNode* bitcoinNode = (BitcoinNode*)(node->item);
         // If bitcoin is a leaf node:
-        if((bitcoinNode->child_a == NULL) && (bitcoinNode->child_b == NULL))
+        // printf("%i %s\n", bitcoinNode->quantity, bitcoinNode->wallet->walletID);
+        if(bitcoinNode->child_a == NULL)
         {
             if(bitcoinNode->wallet == sender)
             {
-                if(bitcoinNode->quantity <= amount)
+                if(bitcoinNode->quantity < amount)
                 {
-                    BitcoinNode* a = initializeBitcoin(transaction, receiver, bitcoinNode->quantity);
-                    BitcoinNode* b = initializeBitcoin(transaction, sender, 0);
+                    bitcoinNode->child_a = initializeBitcoin(transaction, receiver, bitcoinNode->quantity);
+                    bitcoinNode->child_b = initializeBitcoin(transaction, sender, 0);
                     amount -= bitcoinNode->quantity;
                 }
                 else
                 {
-                    BitcoinNode* a = initializeBitcoin(transaction, receiver, amount);
-                    BitcoinNode* b = initializeBitcoin(transaction,
+                    bitcoinNode->child_a = initializeBitcoin(transaction, receiver, amount);
+                    bitcoinNode->child_b = initializeBitcoin(transaction,
                         sender, bitcoinNode->quantity - amount);
                     amount = 0;
+                    break;
                 }
             }
         }
         else
         {
+            // printf("%i %i\n", ((BitcoinNode*)(node->item))->child_a->quantity, ((BitcoinNode*)(node->item))->child_b->quantity);
             Node* nodeA = initializeNode(((BitcoinNode*)(node->item))->child_a);
             Node* nodeB = initializeNode(((BitcoinNode*)(node->item))->child_b);
-            appendToLinkedList(visited, nodeA);
-            appendToLinkedList(visited, nodeB);
+            appendToLinkedList(toVisit, nodeA);
+            appendToLinkedList(toVisit, nodeB);
         }
-        if(amount == 0)
-            break;
     }
+    freeLinkedList(toVisit);
+    return initialAmount - amount;
 }

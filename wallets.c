@@ -4,19 +4,20 @@
 
 void printWallet(Wallet* wallet)
 {
-    printf("Printing wallet: %s, balance %d\n", wallet->walletID, wallet->balance);
+    printf("Printing wallet: %s, balance %lu\n", wallet->walletID, wallet->balance);
     Node* node = wallet->bitcoins->head;
     printf("Bitcoins: ");
     while(node != NULL)
     {
-        printf("%i, ", ((BitcoinRoot*)(node->item))->bitcoinID);
+        printf("%lu, ", ((BitcoinRoot*)(node->item))->bitcoinID);
         node = node->next;
     }
     printf("\n\n");
 }
 
 // Create a leaf bitcoin node:
-BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int quantity)
+BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet,
+    unsigned long int quantity)
 {
     BitcoinNode* bitcoinNode = malloc(sizeof(BitcoinNode));
     bitcoinNode->quantity = quantity;
@@ -28,7 +29,7 @@ BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int qua
 }
 
 // Create a root bitcoin. I just don't want to have the bitcoinID in multiple places...
-BitcoinRoot* initializeBitcoinRoot(int bitcoinID, BitcoinNode* bitcoinNode)
+BitcoinRoot* initializeBitcoinRoot(unsigned long int bitcoinID, BitcoinNode* bitcoinNode)
 {
     BitcoinRoot* bitcoinRoot = malloc(sizeof(BitcoinRoot));
     bitcoinRoot->bitcoinID = bitcoinID;
@@ -37,7 +38,8 @@ BitcoinRoot* initializeBitcoinRoot(int bitcoinID, BitcoinNode* bitcoinNode)
 }
 
 // Return 1 if bitcoin found in bucket or -1 if it's not there:
-int checkBitcoinInBucket(int bitcoinID, Bucket* bucket, size_t bucketSize)
+unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID,
+    Bucket* bucket, size_t bucketSize)
 {
     int found = -1;
     for(int i = 0; i < (bucketSize / sizeof(void*)) - 2; i++)
@@ -58,10 +60,10 @@ int checkBitcoinInBucket(int bitcoinID, Bucket* bucket, size_t bucketSize)
 
 // Add a new bitcoin to the bitcoin hash table.
 // Return 0 if this can be done, -1 if it's already in the hash table:
-int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
-        char* keyToHash, int hashTableSize)
+unsigned long int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
+        char* keyToHash, unsigned long int hashTableSize)
 {
-    int index = hash_function(keyToHash, hashTableSize);
+    unsigned long int index = hash_function(keyToHash, hashTableSize);
 
     // Go through buckets and see if a list exists:
     size_t bucketSize = hashTable->bucketSize;
@@ -127,10 +129,10 @@ Wallet* findWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize)
 
 // Add a new wallet to the wallet hash table.
 // Return 0 if this can be done, -1 if it's already in the hash table:
-int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
-        char* keyToHash, int hashTableSize)
+unsigned long int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
+        char* keyToHash, unsigned long int hashTableSize)
 {
-    int index = hash_function(keyToHash, hashTableSize);
+    unsigned long int index = hash_function(keyToHash, hashTableSize);
 
     // Go through buckets and see if a list exists:
     size_t bucketSize = hashTable->bucketSize;
@@ -165,8 +167,8 @@ int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
 // Return the wallet in the hashtable, NULL if it's not found:
 Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID)
 {
-    int hashTableSize = hashTable->size;
-    int index = hash_function(walletID, hashTableSize);
+    unsigned long int hashTableSize = hashTable->size;
+    unsigned long int index = hash_function(walletID, hashTableSize);
 
     // Go through buckets and see if a list exists:
     size_t bucketSize = hashTable->bucketSize;
@@ -184,9 +186,10 @@ Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID)
 }
 
 // Add the new transaction to the tree and return the amount that belongs to the sender:
-int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount)
+unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction,
+    unsigned long int amount)
 {
-    int initialAmount = amount;
+    unsigned long int initialAmount = amount;
     Wallet* sender = transaction->senderWalletID;
     Wallet* receiver = transaction->receiverWalletID;
     Node* firstNode = initializeNode(bitcoin->rootNode);

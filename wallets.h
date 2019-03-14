@@ -8,13 +8,13 @@ typedef struct Transaction Transaction;
 typedef struct Wallet
 {
     char* walletID;
-    int balance;
+    unsigned long int balance;
     LinkedList* bitcoins;
 } Wallet;
 
 typedef struct BitcoinNode
 {
-    int quantity;
+    unsigned long int quantity;
     Transaction* transaction;
     Wallet* wallet;
     struct BitcoinNode* child_a;
@@ -23,22 +23,24 @@ typedef struct BitcoinNode
 
 typedef struct BitcoinRoot
 {
-    int bitcoinID;
+    unsigned long int bitcoinID;
     BitcoinNode* rootNode;
 } BitcoinRoot;
 
 void printWallet(Wallet* wallet);
 
-BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet, int quantity);
-BitcoinRoot* initializeBitcoinRoot(int bitcoinID, BitcoinNode* bitcoinNode);
-int checkBitcoinInBucket(int bitcoinID, Bucket* bucket, size_t bucketSize);
-int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
-        char* keyToHash, int hashTableSize);
+BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet,
+    unsigned long int quantity);
+BitcoinRoot* initializeBitcoinRoot(unsigned long int bitcoinID, BitcoinNode* bitcoinNode);
+unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID, Bucket* bucket, size_t bucketSize);
+unsigned long int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
+        char* keyToHash, unsigned long int hashTableSize);
 
 Wallet* initializeWallet(char* walletID);
 Wallet* findWalletInBucket(char* walletID, Bucket* bucket, size_t bucketSize);
-int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
-        char* keyToHash, int hashTableSize);
+unsigned long int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
+        char* keyToHash, unsigned long int hashTableSize);
 Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID);
-int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction, int amount);
+unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction,
+    unsigned long int amount);
 #endif //ERGASIA_1_FILE_WALLETS_H

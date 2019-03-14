@@ -6,7 +6,7 @@
 
 void printTransaction(Transaction* transaction)
 {
-    printf("%s %s %s %i %s\n", transaction->transactionID,
+    printf("%s %s %s %lu %s\n", transaction->transactionID,
         transaction->senderWalletID->walletID,
         transaction->receiverWalletID->walletID, transaction->value,
         asctime(localtime(&transaction->datetime)));
@@ -22,7 +22,7 @@ void printTransactionList(LinkedList* transactionLinkedList)
     }while(transactionNode != NULL);
 }
 
-void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize)
+void printBucket(Bucket* bucket, size_t bucketSize)
 {
     for(int i = 0; i < bucketSize / sizeof(void*) - 2; i++)
     {
@@ -31,24 +31,25 @@ void printBucket(Bucket* bucket, int bucket_index, size_t bucketSize)
     }
 }
 
-void printTransactionHashTable(HashTable* hashTable, int hashTableSize, size_t bucketSize)
+void printTransactionHashTable(HashTable* hashTable)
 {
-    printf("tr\n");
+    unsigned long int hashTableSize = hashTable->size;
+    size_t bucketSize = hashTable->bucketSize;
     for(int i = 0; i < hashTableSize; i++)
     {
         Bucket* bucket = hashTable->buckets[i];
-        printBucket(bucket, i, bucketSize);
+        printBucket(bucket, bucketSize);
         while(bucket[bucketSize / sizeof(void*) - 1] != NULL)
         {
             bucket = (Bucket*)bucket[bucketSize / sizeof(void*) - 1];
-            printBucket(bucket, i, bucketSize);
+            printBucket(bucket, bucketSize);
         }
     }
 }
 
 // Create a transaction:
 Transaction* initializeTransaction(char* transactionID, Wallet* senderWallet,
-        Wallet* receiverWallet, int value, char* date, char* _time)
+        Wallet* receiverWallet, unsigned long int value, char* date, char* _time)
 {
     Transaction* newTransaction = malloc(sizeof(Transaction));
     newTransaction->transactionID = malloc(strlen(transactionID) * sizeof(char));
@@ -69,7 +70,8 @@ Transaction* initializeTransaction(char* transactionID, Wallet* senderWallet,
 }
 
 // Return place of wallet id in bucket or -1 if it's not there:
-int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int walletType)
+int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize,
+    int walletType)
 {
     int found = -1;
     for(int i = 0; i < bucketSize / sizeof(void*); i++)
@@ -96,19 +98,43 @@ int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize, int
     return found;
 }
 
+// Return the linked list with the transactions of a specific wallet:
+LinkedList* findWalletInTransactionHashTable(HashTable* hashTable, char* walletID, int walletType)
+{
+    unsigned long int hashTableSize = hashTable->size;
+    unsigned long int index = hash_function(walletID, hashTableSize);
+    LinkedList* transactionList = NULL;
+
+    // Go through buckets and see if a list exists:
+    size_t bucketSize = hashTable->bucketSize;
+    Bucket* bucket = hashTable->buckets[index];
+    unsigned long int position = -1;
+    do
+    {
+        position = checkWalletIDInBucket(walletID, bucket, bucketSize, walletType);
+        if(position != -1)
+            break;
+        bucket = (Bucket*)bucket[(bucketSize / sizeof(void*)) - 1];
+    }while(bucket != NULL);
+
+    if(position != -1)
+        transactionList = (LinkedList*)(bucket[position]);
+    return transactionList;
+}
+
 // Add a new item in a hash table:
 void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction,
-        char* keyToHash, int walletIDType)
+        char* keyToHash, unsigned long int walletIDType)
 {
-    int hashTableSize = hashTable->size;
+    unsigned long int hashTableSize = hashTable->size;
     // Package the transaction in a transaction node:
     Node* newTransactionNode = initializeNode(transaction);
-    int index = hash_function(keyToHash, hashTableSize);
+    unsigned long int index = hash_function(keyToHash, hashTableSize);
 
     // Go through buckets and see if a list exists:
     size_t bucketSize = hashTable->bucketSize;
     Bucket* bucketToInsert = hashTable->buckets[index];
-    int position = -1;
+    unsigned long int position = -1;
     do
     {
         position = checkWalletIDInBucket(keyToHash, bucketToInsert, bucketSize, walletIDType);
@@ -138,11 +164,11 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
 // Check if the requested transaction is possible and do it. Engage.
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     HashTable* senderHashTable, HashTable* receiverHashTable,
-    int bitcoinValue, time_t* latestTransactionTime)
+    unsigned long int bitcoinValue, time_t* latestTransactionTime)
 {
     Wallet* sender = transaction->senderWalletID;
     Wallet* receiver = transaction->receiverWalletID;
-    int amount = transaction->value;
+    unsigned long int amount = transaction->value;
 
     printf("\n");
     printf("Requesting transaction:\n");
@@ -187,10 +213,10 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     while(amount > 0)
     {
         BitcoinRoot* bitcoinToTake = (BitcoinRoot*)(bitcoinNodeToTake->item);
-        printf("%i\n", bitcoinToTake->bitcoinID);
+        printf("%lu\n", bitcoinToTake->bitcoinID);
         // Have to go through the God-damn tree:
-        int amountGained = TreeBFSTransaction(bitcoinToTake, transaction, amount);
-        printf("Gained: %i\n", amountGained);
+        unsigned long int amountGained = TreeBFSTransaction(bitcoinToTake, transaction, amount);
+        printf("Gained: %lu\n", amountGained);
         amount -= amountGained;
         // Check to see whether bitcoin already in receiver:
         Node* node = receiver->bitcoins->head;

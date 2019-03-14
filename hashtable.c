@@ -10,8 +10,8 @@
 Bucket* initializeBucket(size_t bucketSize)
 {
     Bucket* bucket = malloc(bucketSize);
-    long int numOfEntries = bucketSize / sizeof(void*);
-    for(int i = 0; i < numOfEntries; i++)
+    unsigned long int numOfEntries = bucketSize / sizeof(void*);
+    for(unsigned long int i = 0; i < numOfEntries; i++)
     {
         bucket[i] = NULL;
     }
@@ -36,8 +36,8 @@ int checkBucketHasNext(Bucket* bucket, size_t bucketSize)
 // bucket and insert it there:
 void insertToBucket(Bucket* bucket, void* item, size_t bucketSize)
 {
-    long int numOfEntries = bucketSize / sizeof(void*);
-    long int counter = (long int)bucket[numOfEntries - 2];
+    unsigned long int numOfEntries = bucketSize / sizeof(void*);
+    unsigned long int counter = (unsigned long int)bucket[numOfEntries - 2];
 
     // Check from counter if bucket is full:
     if(counter == numOfEntries - 2)
@@ -54,11 +54,11 @@ void insertToBucket(Bucket* bucket, void* item, size_t bucketSize)
 }
 
 // Create a hash table (an array of buckets basically) and return it:
-HashTable* initializeHashTable(int hashTableSize, size_t bucketSize)
+HashTable* initializeHashTable(unsigned long int hashTableSize, size_t bucketSize)
 {
     HashTable* hashTable = malloc(sizeof(hashTable));
     hashTable->buckets = malloc(hashTableSize * sizeof(Bucket*));
-    for(int i = 0; i < hashTableSize; i++)
+    for(unsigned long int i = 0; i < hashTableSize; i++)
     {
         hashTable->buckets[i] = initializeBucket(bucketSize);
     }

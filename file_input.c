@@ -10,18 +10,18 @@
 #define BUFFER_SIZE 1024
 
 int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHashTable,
-        HashTable** bitcoinHashTable, size_t bucketSize, int bitcoinValue)
+        HashTable** bitcoinHashTable, size_t bucketSize, unsigned long int bitcoinValue)
 {
     FILE* bitcoinBalancesFile = fopen(bitcoinBalancesFileName, "r");
 
     // We want to count the number of wallets and bitcoins first:
-    long int numberOfWallets = 0;
-    long int numberOfBitcoins = 0;
-    long int walletHashTableNumOfEntries;
-    long int bitcoinHashTableNumOfEntries;
+    unsigned long int numberOfWallets = 0;
+    unsigned long int numberOfBitcoins = 0;
+    unsigned long int walletHashTableNumOfEntries;
+    unsigned long int bitcoinHashTableNumOfEntries;
 
     char* walletID;
-    int bitcoinID;
+    unsigned long int bitcoinID;
     int inserted;
 
     //Check bitcoin balances file name is correct:
@@ -48,10 +48,12 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
     // as the last 2 positions are special and then use that to divide the number of "things" we
     // want to store. This way we can have a number of entries for the hash table that ensures that
     // most places have just one bucket.
-    walletHashTableNumOfEntries = (long int)(numberOfWallets / ((bucketSize / (sizeof(void*))) - 2));
-    bitcoinHashTableNumOfEntries = (long int)(numberOfBitcoins / ((bucketSize / (sizeof(void*))) - 2));
+    walletHashTableNumOfEntries = (unsigned long int)(
+            numberOfWallets / ((bucketSize / (sizeof(void*))) - 2));
+    bitcoinHashTableNumOfEntries = (unsigned long int)(
+            numberOfBitcoins / ((bucketSize / (sizeof(void*))) - 2));
 
-    int minValue = (int)((bucketSize / (sizeof(void*))) / 5);
+    unsigned long int minValue = (unsigned long int)((bucketSize / (sizeof(void*))) / 5);
 
     if(walletHashTableNumOfEntries < minValue)
         walletHashTableNumOfEntries = minValue;
@@ -125,17 +127,19 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
 
 void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         HashTable* receiverHashTable, HashTable* walletHashTable,
-        int senderHashTableSize, int receiverHashTableSize,
-        int bitcoinValue, time_t* latestTransactionTime)
+        unsigned long int bitcoinValue, time_t* latestTransactionTime)
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
 
     char* transactionID;
     char* sender;
     char* receiver;
-    int value;
+    unsigned long value;
     char* date;
     char* time;
+
+    unsigned long int senderHashTableSize = senderHashTable->size;
+    unsigned long int receiverHashTableSize = receiverHashTable->size;
 
     //Check transaction file name is correct:
     if(transactionFile == NULL)
@@ -150,7 +154,7 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         transactionID = strtok(line, " ");
         sender = strtok(NULL, " ");
         receiver = strtok(NULL, " ");
-        value = atoi(strtok(NULL, " "));
+        value = strtoul(strtok(NULL, " "), NULL, 10);
         date = strtok(NULL, " ");
         time = strtok(NULL, " ");
         Wallet* senderWallet = findWalletInHashTable(walletHashTable, sender);

@@ -59,7 +59,7 @@ Transaction* initializeTransaction(char* transactionID, Wallet* senderWallet,
     newTransaction->value = value;
 
     // Convert date and time into timestamp. Much easier to handle:
-    struct tm timestruct;
+    struct tm timestruct = {0};
     char datetime[30];
     strcpy(datetime, date);
     strcat(datetime, _time);
@@ -170,14 +170,14 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     Wallet* receiver = transaction->receiverWalletID;
     unsigned long int amount = transaction->value;
 
-    printf("\n");
-    printf("Requesting transaction:\n");
-    printTransaction(transaction);
-    printf("\n...\n");
+    // printf("\n");
+    // printf("Requesting transaction:\n");
+    // printTransaction(transaction);
+    // printf("\n...\n");
 
-    printf("Before:\n");
-    printWallet(sender);
-    printWallet(receiver);
+    // printf("Before:\n");
+    // printWallet(sender);
+    // printWallet(receiver);
 
     // Check sender and receiver are different:
     if(sender == receiver)
@@ -213,10 +213,10 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     while(amount > 0)
     {
         BitcoinRoot* bitcoinToTake = (BitcoinRoot*)(bitcoinNodeToTake->item);
-        printf("%lu\n", bitcoinToTake->bitcoinID);
+        // printf("%lu\n", bitcoinToTake->bitcoinID);
         // Have to go through the God-damn tree:
         unsigned long int amountGained = TreeBFSTransaction(bitcoinToTake, transaction, amount);
-        printf("Gained: %lu\n", amountGained);
+        // printf("Gained: %lu\n", amountGained);
         amount -= amountGained;
         // Check to see whether bitcoin already in receiver:
         Node* node = receiver->bitcoins->head;
@@ -266,11 +266,66 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
         bitcoinNodeToTake = bitcoinNodeToTake->next;
     }
 
-    printf("After:\n");
-    printWallet(sender);
-    printWallet(receiver);
+    // printf("After:\n");
+    // printWallet(sender);
+    // printWallet(receiver);
 
     insertToTransactionHashTable(senderHashTable, transaction, sender->walletID, 1);
     insertToTransactionHashTable(receiverHashTable, transaction, receiver->walletID, 0);
     return 0;
+}
+
+void freeTransactionHashtable(HashTable* hashTable)
+{
+    // For each bucket:
+    for(unsigned long int i = 0; i < hashTable->size; i++)
+    {
+        Bucket* bucket = hashTable->buckets[i];
+        Node* node;
+        while(bucket != NULL)
+        {
+            for(unsigned long int j = 0; j < ((hashTable->bucketSize) / sizeof(void*) - 2); j++)
+            {
+                if(bucket[j] == NULL)
+                    break;
+                node = ((LinkedList*)bucket[j])->head;
+                do
+                {
+                    Transaction* transaction = (Transaction*)(node->item);
+                    free(transaction->transactionID);
+                    free(transaction);
+                    node = node->next;
+                } while (node != NULL);
+                freeLinkedList((LinkedList*)bucket[j]);
+            }
+            Bucket* currentBucket = bucket;
+            bucket = (Bucket*)(bucket[(hashTable->bucketSize) / sizeof(void*) - 1]);
+            free(currentBucket);
+        }
+    }
+    free(hashTable->buckets);
+    free(hashTable);
+}
+
+void freeTransactionHashtableCore(HashTable* hashTable)
+{
+    // For each bucket:
+    for(unsigned long int i = 0; i < hashTable->size; i++)
+    {
+        Bucket* bucket = hashTable->buckets[i];
+        while(bucket != NULL)
+        {
+            for(unsigned long int j = 0; j < ((hashTable->bucketSize) / sizeof(void*) - 2); j++)
+            {
+                if(bucket[j] == NULL)
+                    break;
+                freeLinkedList((LinkedList*)bucket[j]);
+            }
+            Bucket* currentBucket = bucket;
+            bucket = (Bucket*)(bucket[(hashTable->bucketSize) / sizeof(void*) - 1]);
+            free(currentBucket);
+        }
+    }
+    free(hashTable->buckets);
+    free(hashTable);
 }

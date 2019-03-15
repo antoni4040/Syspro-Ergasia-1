@@ -36,4 +36,7 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     HashTable* senderHashTable, HashTable* receiverHashTable,
     unsigned long int bitcoinValue, time_t* latestTransactionTime);
 
+void freeTransaction(Transaction* transaction);
+void freeTransactionHashtable(HashTable* hashTable);
+void freeTransactionHashtableCore(HashTable* hashTable);
 #endif //ERGASIA_1_TRANSACTIONS_H

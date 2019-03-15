@@ -52,4 +52,5 @@ void freeLinkedList(LinkedList* linkedList)
         linkedList->head = linkedList->head->next;
         free(node);
     }
+    free(linkedList);
 }

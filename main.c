@@ -76,8 +76,8 @@ int main(int argc, char **argv)
     // Create receiver hash table:
     HashTable* receiverHashTable = initializeHashTable(receiverHashtableNumOfEntries, bucketSize);
 
-    HashTable* bitcoinHashTable;
-    HashTable* walletHashTable;
+    HashTable* bitcoinHashTable = NULL;
+    HashTable* walletHashTable = NULL;
 
     // Read the wallet and bitcoin IDs:
     readBitcoinBalancesFile(bitCoinBalancesFile, &walletHashTable,
@@ -88,5 +88,12 @@ int main(int argc, char **argv)
             bitCoinValue, &latestTransactionTime);
 
     commandLine(senderHashTable, receiverHashTable, walletHashTable);
+
+    free(bitCoinBalancesFile);
+    free(transactionsFile);
+    freeTransactionHashtable(senderHashTable);
+    freeTransactionHashtableCore(receiverHashTable);
+    freeWalletHashTable(walletHashTable);
+    freeBitcoinHashTable(bitcoinHashTable);
     return 0;
 }

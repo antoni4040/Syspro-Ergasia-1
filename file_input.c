@@ -17,8 +17,8 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
     // We want to count the number of wallets and bitcoins first:
     unsigned long int numberOfWallets = 0;
     unsigned long int numberOfBitcoins = 0;
-    unsigned long int walletHashTableNumOfEntries;
-    unsigned long int bitcoinHashTableNumOfEntries;
+    unsigned long int walletHashTableNumOfEntries = 0;
+    unsigned long int bitcoinHashTableNumOfEntries = 0;
 
     char* walletID;
     unsigned long int bitcoinID;
@@ -118,10 +118,11 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
             }
             token = strtok(NULL, " ");
         }
-        printWallet(newWallet);
+        // printWallet(newWallet);
     }
 
     free(line);
+    fclose(bitcoinBalancesFile);
     return 0;
 }
 
@@ -174,4 +175,5 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
             bitcoinValue, latestTransactionTime);
     }
     free(line);
+    fclose(transactionFile);
 }

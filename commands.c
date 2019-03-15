@@ -27,7 +27,11 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
         }
         else if(strcmp(command, "findEarnings") == 0)
         {
-            findEarningsCommand(receiverHashTable ,strtok(NULL, "\n"));
+            findEarningsPaymentsCommand(receiverHashTable, strtok(NULL, "\n"), 0);
+        }
+        else if(strcmp(command, "findPayments") == 0)
+        {
+            findEarningsPaymentsCommand(senderHashTable, strtok(NULL, "\n"), 1);
         }
         else if(strcmp(command, "walletStatus") == 0)
         {
@@ -45,6 +49,7 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
         putchar('~');
         putchar(' ');
     }
+    free(line);
 }
 
 void requestTransactionCommand(char* line)
@@ -74,7 +79,7 @@ void walletStatusCommand(char* line, HashTable* walletHashTable)
 
 // For a given wallet print the total amount received and all the transactions
 // related to it:
-void findEarningsCommand(HashTable* receivers, char* line)
+void findEarningsPaymentsCommand(HashTable* hashtable, char* line, int walletType)
 {
     time_t start;
     time_t end;
@@ -116,6 +121,7 @@ void findEarningsCommand(HashTable* receivers, char* line)
         }
         else if(sscanf(parameter, "%d:%d", &hours, &minutes) == 2)
         {
+            // printf("%d %d\n", minutes, hours);
             timeGiven = 1;
         }
         else
@@ -156,7 +162,7 @@ void findEarningsCommand(HashTable* receivers, char* line)
                 return;
             }
         }
-        else if(sscanf(parameter, "%d:%d", &hoursEnd, &minutesEnd) == 2)
+        else if(sscanf(parameter2, "%d:%d", &hoursEnd, &minutesEnd) == 2)
         {
             if(timeGiven == 1)
             {
@@ -207,15 +213,15 @@ void findEarningsCommand(HashTable* receivers, char* line)
     }
 
     // FIND THE WALLET! (Imagine it an Uruk-Hai voice.)
-    LinkedList* transactionList = findWalletInTransactionHashTable(receivers, walletID, 0);
+    LinkedList* transactionList = findWalletInTransactionHashTable(hashtable, walletID, walletType);
     if(transactionList == NULL)
     {
         printf("Wallet not found. When you try your best but you don't succeed.\n");
         return;
     }
 
-    printf("%s\n", asctime(localtime(&start)));
-    printf("%s\n", asctime(localtime(&end)));
+    // printf("%s\n", asctime(localtime(&start)));
+    // printf("%s\n", asctime(localtime(&end)));
 
     unsigned long int amount = 0;
 
@@ -230,6 +236,24 @@ void findEarningsCommand(HashTable* receivers, char* line)
             continue;
         }
         time_t datetime = ((Transaction*)(transactionNode->item))->datetime;
+
+        if(timeOnly == 1)
+        {
+            timestruct = *localtime(&datetime);
+
+            timestruct.tm_min = minutes;
+            timestruct.tm_hour = hours;
+            timestruct.tm_sec = 0;
+            start = mktime(&timestruct);
+
+            timestruct.tm_min = minutesEnd;
+            timestruct.tm_hour = hoursEnd;
+            timestruct.tm_sec = 0;
+            end = mktime(&timestruct);
+
+            // printf("%s %s\n", asctime(localtime(&start)), asctime(localtime(&end)));
+        }
+
         if(datetime >= start && datetime <= end)
         {
             amount += ((Transaction*)(transactionNode->item))->value;
@@ -252,6 +276,24 @@ void findEarningsCommand(HashTable* receivers, char* line)
             continue;
         }
         time_t datetime = ((Transaction*)(transactionNode->item))->datetime;
+
+        if(timeOnly == 1)
+        {
+            timestruct = *localtime(&datetime);
+
+            timestruct.tm_min = minutes;
+            timestruct.tm_hour = hours;
+            timestruct.tm_sec = 0;
+            start = mktime(&timestruct);
+
+            timestruct.tm_min = minutesEnd;
+            timestruct.tm_hour = hoursEnd;
+            timestruct.tm_sec = 0;
+            end = mktime(&timestruct);
+
+            // printf("%s %s\n", asctime(localtime(&start)), asctime(localtime(&end)));
+        }
+
         if(datetime >= start && datetime <= end)
         {
             printTransaction((Transaction*)(transactionNode->item));

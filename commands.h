@@ -10,5 +10,5 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
     HashTable* walletHashTable);
 void requestTransactionCommand(char* line);
 void walletStatusCommand(char* line, HashTable* walletHashTable);
-void findEarningsCommand(HashTable* receivers, char* line);
+void findEarningsPaymentsCommand(HashTable* hashtable, char* line, int walletType);
 #endif //ERGASIA_1_COMMANDS_H

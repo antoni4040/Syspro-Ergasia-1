@@ -43,4 +43,9 @@ unsigned long int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
 Wallet* findWalletInHashTable(HashTable* hashTable, char* walletID);
 unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transaction,
     unsigned long int amount);
+
+void freeWallet(Wallet* wallet);
+void freeBitcoinTree(BitcoinRoot* bitcoinRoot);
+void freeWalletHashTable(HashTable* wallets);
+void freeBitcoinHashTable(HashTable* bitcoins);
 #endif //ERGASIA_1_FILE_WALLETS_H

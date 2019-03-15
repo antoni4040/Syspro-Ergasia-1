@@ -194,6 +194,8 @@ unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transact
     Wallet* receiver = transaction->receiverWalletID;
     Node* firstNode = initializeNode(bitcoin->rootNode);
     LinkedList* toVisit = initializeLinkedList(firstNode);
+    Node* nodeA;
+    Node* nodeB;
     while(toVisit->head != NULL)
     {
         Node* node = popStart(toVisit);
@@ -216,6 +218,7 @@ unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transact
                     bitcoinNode->child_b = initializeBitcoin(transaction,
                         sender, bitcoinNode->quantity - amount);
                     amount = 0;
+                    free(node);
                     break;
                 }
             }
@@ -223,12 +226,85 @@ unsigned long int TreeBFSTransaction(BitcoinRoot* bitcoin, Transaction* transact
         else
         {
             // printf("%i %i\n", ((BitcoinNode*)(node->item))->child_a->quantity, ((BitcoinNode*)(node->item))->child_b->quantity);
-            Node* nodeA = initializeNode(((BitcoinNode*)(node->item))->child_a);
-            Node* nodeB = initializeNode(((BitcoinNode*)(node->item))->child_b);
+            nodeA = initializeNode(((BitcoinNode*)(node->item))->child_a);
+            nodeB = initializeNode(((BitcoinNode*)(node->item))->child_b);
             appendToLinkedList(toVisit, nodeA);
             appendToLinkedList(toVisit, nodeB);
         }
+        free(node);
     }
     freeLinkedList(toVisit);
     return initialAmount - amount;
+}
+
+void freeWallet(Wallet* wallet)
+{
+    free(wallet->walletID);
+    freeLinkedList(wallet->bitcoins);
+    free(wallet);
+}
+
+void freeBitcoinNode(BitcoinNode* bitcoinNode)
+{
+    if(bitcoinNode == NULL)
+        return;
+    else
+    {
+        freeBitcoinNode(bitcoinNode->child_a);
+        freeBitcoinNode(bitcoinNode->child_b);
+    }
+    free(bitcoinNode);
+}
+
+void freeBitcoinTree(BitcoinRoot* bitcoinRoot)
+{
+    freeBitcoinNode(bitcoinRoot->rootNode);
+    free(bitcoinRoot);
+}
+
+void freeWalletHashTable(HashTable* wallets)
+{
+    for(unsigned long int i = 0; i < wallets->size; i++)
+    {
+        Bucket* bucket = wallets->buckets[i];
+        Node* node;
+        while(bucket != NULL)
+        {
+            for(unsigned long int j = 0; j < ((wallets->bucketSize) / sizeof(void*) - 2); j++)
+            {
+                if(bucket[j] == NULL)
+                    break;
+                Wallet* wallet = (Wallet*)(bucket[j]);
+                freeWallet(wallet);
+            }
+            Bucket* currentBucket = bucket;
+            bucket = (Bucket*)(bucket[(wallets->bucketSize) / sizeof(void*) - 1]);
+            free(currentBucket);
+        }
+    }
+    free(wallets->buckets);
+    free(wallets);
+}
+
+void freeBitcoinHashTable(HashTable* bitcoins)
+{
+    for(unsigned long int i = 0; i < bitcoins->size; i++)
+    {
+        Bucket* bucket = bitcoins->buckets[i];
+        while(bucket != NULL)
+        {
+            for(unsigned long int j = 0; j < ((bitcoins->bucketSize) / sizeof(void*) - 2); j++)
+            {
+                if(bucket[j] == NULL)
+                    break;
+                BitcoinRoot* bitcoinRoot = (BitcoinRoot*)(bucket[j]);
+                freeBitcoinTree(bitcoinRoot);
+            }
+            Bucket* currentBucket = bucket;
+            bucket = (Bucket*)(bucket[(bitcoins->bucketSize) / sizeof(void*) - 1]);
+            free(currentBucket);
+        }
+    }
+    free(bitcoins->buckets);
+    free(bitcoins);
 }

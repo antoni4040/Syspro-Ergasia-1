@@ -40,6 +40,8 @@ Node* popStart(LinkedList* linkedList)
 {
     Node* node = linkedList->head;
     linkedList->head = linkedList->head->next;
+    if(linkedList->head == NULL)
+        linkedList->tail = NULL;
     return node;
 }
 

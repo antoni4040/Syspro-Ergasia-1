@@ -85,9 +85,10 @@ int main(int argc, char **argv)
 
     // Read the transactions file and setup the hash tables:
     readTransactionsFile(transactionsFile, senderHashTable, receiverHashTable, walletHashTable,
-            bitCoinValue, &latestTransactionTime);
+            bitCoinValue, &latestTransactionTime, &latestTransactionID);
 
-    commandLine(senderHashTable, receiverHashTable, walletHashTable);
+    commandLine(senderHashTable, receiverHashTable, walletHashTable, bitcoinHashTable,
+    bitCoinValue, &latestTransactionTime, &latestTransactionID);
 
     free(bitCoinBalancesFile);
     free(transactionsFile);

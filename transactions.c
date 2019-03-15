@@ -74,7 +74,7 @@ int checkWalletIDInBucket(char* walletID, Bucket* bucket, size_t bucketSize,
     int walletType)
 {
     int found = -1;
-    for(int i = 0; i < bucketSize / sizeof(void*); i++)
+    for(int i = 0; i < bucketSize / sizeof(void*) - 2; i++)
     {
         if(bucket[i] == NULL)
             break;
@@ -164,20 +164,20 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
 // Check if the requested transaction is possible and do it. Engage.
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     HashTable* senderHashTable, HashTable* receiverHashTable,
-    unsigned long int bitcoinValue, time_t* latestTransactionTime)
+    unsigned long int bitcoinValue, time_t* latestTransactionTime, int _print)
 {
     Wallet* sender = transaction->senderWalletID;
     Wallet* receiver = transaction->receiverWalletID;
     unsigned long int amount = transaction->value;
 
-    // printf("\n");
-    // printf("Requesting transaction:\n");
-    // printTransaction(transaction);
-    // printf("\n...\n");
-
-    // printf("Before:\n");
-    // printWallet(sender);
-    // printWallet(receiver);
+    if(_print == 1)
+    {
+        printf("Requesting transaction:\n");
+        printTransaction(transaction);
+        printf("Before:\n");
+        printWallet(sender);
+        printWallet(receiver);
+    }
 
     // Check sender and receiver are different:
     if(sender == receiver)
@@ -241,8 +241,9 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
         // has any portion of this bitcoin. Let's remove it:
         if(amountGained == 0)
         {
-            free(sender->bitcoins->head);
-            if(sender->bitcoins->head->next == NULL)
+            // free(sender->bitcoins->head);
+            Node* _node = sender->bitcoins->head;
+            if(sender->bitcoins->head == sender->bitcoins->tail)
             {
                 sender->bitcoins->head = NULL;
                 sender->bitcoins->tail = NULL;
@@ -251,6 +252,9 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
             {
                 sender->bitcoins->head = sender->bitcoins->head->next;
             }
+            bitcoinNodeToTake = bitcoinNodeToTake->next;
+            free(_node);
+
             // else if(sender->bitcoins->tail == *bitcoinNodeToTake)
             // {
             //     sender->bitcoins->tail = *previous;
@@ -261,14 +265,18 @@ int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
             //     (*previous)->next = (*bitcoinNodeToTake)->next;
             // }
         }
-
-
-        bitcoinNodeToTake = bitcoinNodeToTake->next;
+        else
+        {
+            bitcoinNodeToTake = bitcoinNodeToTake->next;
+        }
     }
 
-    // printf("After:\n");
-    // printWallet(sender);
-    // printWallet(receiver);
+    if(_print == 1)
+    {
+        printf("After:\n");
+        printWallet(sender);
+        printWallet(receiver);
+    }
 
     insertToTransactionHashTable(senderHashTable, transaction, sender->walletID, 1);
     insertToTransactionHashTable(receiverHashTable, transaction, receiver->walletID, 0);

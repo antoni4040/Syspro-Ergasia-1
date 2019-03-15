@@ -34,7 +34,7 @@ void insertToTransactionHashTable(HashTable* hashTable, Transaction* transaction
     char* keyToHash, unsigned long int walletIDType);
 int requestTransaction(Transaction* transaction, HashTable* walletHashTable,
     HashTable* senderHashTable, HashTable* receiverHashTable,
-    unsigned long int bitcoinValue, time_t* latestTransactionTime);
+    unsigned long int bitcoinValue, time_t* latestTransactionTime, int _print);
 
 void freeTransaction(Transaction* transaction);
 void freeTransactionHashtable(HashTable* hashTable);

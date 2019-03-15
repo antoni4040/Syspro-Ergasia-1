@@ -37,7 +37,7 @@ BitcoinRoot* initializeBitcoinRoot(unsigned long int bitcoinID, BitcoinNode* bit
     return bitcoinRoot;
 }
 
-// Return 1 if bitcoin found in bucket or -1 if it's not there:
+// Return position if bitcoin found in bucket or -1 if it's not there:
 unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID,
     Bucket* bucket, size_t bucketSize)
 {
@@ -50,12 +50,37 @@ unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID,
         {
             if (((BitcoinRoot*)(bucket[i]))->bitcoinID == bitcoinID)
             {
-                found = 1;
+                found = i;
                 break;
             }
         }
     }
     return found;
+}
+
+// Return the bitcoin if found in the hashtable:
+BitcoinRoot* findBitcoin(unsigned long int bitcoinID, HashTable* bitcoins)
+{
+    BitcoinRoot* bitcoinToReturn;
+    char bitcoinIDString[20];
+    sprintf(bitcoinIDString, "%lu", bitcoinID);
+    unsigned long int index = hash_function(bitcoinIDString, bitcoins->size);
+    Bucket* bucket = bitcoins->buckets[index];
+    int found = -1;
+    do
+    {
+        found = checkBitcoinInBucket(bitcoinID, bucket, bitcoins->bucketSize);
+        if(found != -1)
+            break;
+        bucket = (Bucket*)bucket[(bitcoins->bucketSize / sizeof(void*)) - 1];
+    }while(bucket != NULL);
+
+    if(found != -1)
+    {
+        return ((BitcoinRoot*)(bucket[found]));
+    }
+    else
+        return NULL;
 }
 
 // Add a new bitcoin to the bitcoin hash table.
@@ -101,7 +126,7 @@ Wallet* initializeWallet(char* walletID)
     Wallet* newWallet = malloc(sizeof(Wallet));
     newWallet->walletID = malloc((strlen(walletID) * sizeof(char))+1);
     strcpy(newWallet->walletID, walletID);
-    newWallet->bitcoins = malloc(sizeof(LinkedList));
+    newWallet->bitcoins = NULL;
     newWallet->balance = 0;
     return newWallet;
 }

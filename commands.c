@@ -1,7 +1,8 @@
 #include "commands.h"
 
 void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
-    HashTable* walletHashTable)
+    HashTable* walletHashTable, HashTable* bitcoinsHashTable, unsigned long int bitcoinValue,
+    time_t* latestTransactionTime, unsigned long int* latestTransactionID)
 {
     char* command;
 
@@ -23,7 +24,20 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
         }
         else if(strcmp(command, "requestTransaction") == 0)
         {
-            requestTransactionCommand(strtok(NULL, "\n"));
+            requestTransactionCommand(strtok(NULL, "\n"), walletHashTable, senderHashTable,
+                receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
+        }
+        else if(strcmp(command, "requestTransactions") == 0)
+        {
+            requestTransactionCommand(strtok(NULL, ";\n"), walletHashTable, senderHashTable,
+                    receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
+            getline(&line, & len, stdin);
+            while(strcmp(line, "\n") != 0)
+            {
+                requestTransactionCommand(strtok(line, ";\n"), walletHashTable, senderHashTable,
+                    receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
+                getline(&line, & len, stdin);
+            }
         }
         else if(strcmp(command, "findEarnings") == 0)
         {
@@ -36,6 +50,14 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
         else if(strcmp(command, "walletStatus") == 0)
         {
             walletStatusCommand(strtok(NULL, "\n"), walletHashTable);
+        }
+        else if(strcmp(command, "bitCoinStatus") == 0)
+        {
+            bitCoinStatusCommand(strtok(NULL, "\n"), bitcoinsHashTable, 0);
+        }
+        else if(strcmp(command, "traceCoin") == 0)
+        {
+            bitCoinStatusCommand(strtok(NULL, "\n"), bitcoinsHashTable, 1);
         }
         else if(strcmp(command, "exit") == 0)
         {
@@ -52,14 +74,97 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
     free(line);
 }
 
-void requestTransactionCommand(char* line)
+void requestTransactionCommand(char* line, HashTable* wallets, HashTable* senders,
+    HashTable* receivers, time_t* latestTransactionTime, unsigned long int* latestTransactionID,
+    unsigned long int bitcoinValue)
 {
-    char* transactionID;
+    char transactionID[20];
+    *latestTransactionID = *latestTransactionID + 1;
+    sprintf(transactionID, "%lu", *latestTransactionID);
     char* sender;
     char* receiver;
-    int value;
+    char* _value;
+    unsigned long int value;
     char* date;
-    char* time;
+    char* _time;
+
+    time_t rawtime;
+    struct tm * timestruct;
+    time(&rawtime);
+    timestruct = localtime(&rawtime);
+
+    int currentTime = 0;
+
+    sender = strtok(line, " ");
+    if(sender == NULL)
+    {
+        printf("Some parameters are missing. All of them actually...\n");
+        return;
+    }
+
+    Wallet* senderWallet = findWalletInHashTable(wallets, sender);
+    if(senderWallet == NULL)
+    {
+        printf("Sender Wallet not found.\n");
+        return;
+    }
+
+    receiver = strtok(NULL, " ");
+    if(receiver == NULL)
+    {
+        printf("Some parameters are missing.\n");
+        return;
+    }
+
+    Wallet* receiverWallet = findWalletInHashTable(wallets, receiver);
+    if(receiverWallet == NULL)
+    {
+        printf("Receiver Wallet not found.\n");
+        return;
+    }
+
+    _value = strtok(NULL, " ");
+    if(_value == NULL)
+    {
+        printf("Some parameters are missing.\n");
+        return;
+    }
+    value = strtoul(_value, NULL, 10);
+
+    date = strtok(NULL, " ");
+    _time = strtok(NULL, " ");
+    if(date == NULL && _time == NULL)
+    {
+        currentTime = 1;
+    }
+    else if(date == NULL || _time == NULL)
+    {
+        printf("Some parameters are missing.\n");
+        return;
+    }
+
+    Transaction* transaction;
+
+    if(currentTime == 1)
+    {
+        char dateString[20];
+        strcpy(dateString, "1-1-2000");
+        char _timeString[10];
+        strcpy(_timeString, "00:00");
+        transaction = initializeTransaction(transactionID, senderWallet,
+        receiverWallet, value, dateString, _timeString);
+    }
+    else
+    {
+        transaction = initializeTransaction(transactionID, senderWallet,
+        receiverWallet, value, date, _time);
+    }
+
+    if(currentTime == 1)
+    {
+        transaction->datetime = mktime(timestruct);
+    }
+    requestTransaction(transaction, wallets, senders, receivers, bitcoinValue, latestTransactionTime, 1);
 }
 
 void walletStatusCommand(char* line, HashTable* walletHashTable)
@@ -300,4 +405,102 @@ void findEarningsPaymentsCommand(HashTable* hashtable, char* line, int walletTyp
         }
         transactionNode = transactionNode->next;
     }while(transactionNode != NULL);
+}
+
+// Function for both bitCoinStatus and traceCoin commands. doWhat works as a switch between them:
+void bitCoinStatusCommand(char* bitcoinID, HashTable* bitcoins, int doWhat)
+{
+    BitcoinRoot* bitcoinRoot = findBitcoin(strtoul(bitcoinID, NULL, 10), bitcoins);
+    Wallet* initialWallet = bitcoinRoot->rootNode->wallet;
+    Node* firstNode = initializeNode(bitcoinRoot->rootNode);
+    if(doWhat == 0)
+        printf("Bitcoin initial value: %lu.\n", bitcoinRoot->rootNode->quantity);
+    LinkedList* toVisit = initializeLinkedList(firstNode);
+
+    Transaction* transaction = bitcoinRoot->rootNode->transaction;
+    Node* transactionNode;
+    LinkedList* transactionsList = initializeLinkedList(NULL);
+    Node* nodeA;
+    Node* nodeB;
+    Node* _node;
+    while(toVisit->head != NULL)
+    {
+        Node* node = popStart(toVisit);
+        BitcoinNode* bitcoinNode = (BitcoinNode*)(node->item);
+        transaction = bitcoinNode->transaction;
+        // If bitcoin is a leaf node:
+        if(bitcoinNode->child_a != NULL)
+        {
+            // printf("%i %i\n", ((BitcoinNode*)(node->item))->child_a->quantity, ((BitcoinNode*)(node->item))->child_b->quantity);
+            nodeA = initializeNode(((BitcoinNode*)(node->item))->child_a);
+            nodeB = initializeNode(((BitcoinNode*)(node->item))->child_b);
+            appendToLinkedList(toVisit, nodeA);
+            appendToLinkedList(toVisit, nodeB);
+        }
+
+        if(transaction == NULL)
+        {
+            free(node);
+            continue;
+        }
+
+        _node = transactionsList->head;
+        int found = 0;
+        while(_node != NULL)
+        {
+            if(_node != NULL)
+            if(strcmp(
+                ((Transaction*)(
+                    _node->item))->transactionID, transaction->transactionID) == 0)
+            {
+                found = 1;
+            }
+            _node = _node->next;
+        }
+
+        if(found == 0)
+        {
+            transactionNode = initializeNode(transaction);
+            appendToLinkedList(transactionsList, transactionNode);
+        }
+
+        free(node);
+    }
+
+    if(doWhat == 0)
+    {
+        _node = transactionsList->head;
+        int transactionsNum = 0;
+        while(_node != NULL)
+        {
+            transactionsNum++;
+            _node = _node->next;
+        }
+        printf("Number of transactions: %i.\n", transactionsNum);
+    }
+    else
+    {
+        _node = transactionsList->head;
+        while(_node != NULL)
+        {
+            printTransaction((Transaction*)(_node->item));
+            _node = _node->next;
+        }
+    }
+
+    // Find unspent:
+    if(doWhat == 0)
+    {
+        BitcoinNode* bitcoinNode = bitcoinRoot->rootNode;
+        unsigned long int quantity = bitcoinNode->quantity;
+        while(bitcoinNode->child_b != NULL)
+        {
+            bitcoinNode = bitcoinNode->child_b;
+            quantity = bitcoinNode->quantity;
+        }
+        printf("Unspent amount: %lu\n", quantity);
+    }
+
+    freeLinkedList(transactionsList);
+    freeLinkedList(toVisit);
 }

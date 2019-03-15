@@ -67,22 +67,16 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
     // Go back to beginning of file:
     rewind(bitcoinBalancesFile);
 
+    inserted = 0;
+
     // Read the file a second time and now add the wallets and bitcoins to the hash tables:
     while (getline(&line, &len, bitcoinBalancesFile) != EOF)
     {
         // Get the wallet:
         walletID = strtok(line, " ");
         Wallet* newWallet = initializeWallet(walletID);
-        inserted = insertToWalletHashTable(*walletHashTable, newWallet,
-            walletID, walletHashTableNumOfEntries);
 
-        // If wallet already in hash table:
-        if(inserted != 0)
-        {
-            fprintf(stderr, "Wallet ID duplicate found. May we see each other again.\n");
-            return 1;
-        }
-
+        LinkedList* newLinkedList;
         char* token = strtok(NULL, " ");
         int createLList = 0;
         while(token)
@@ -95,7 +89,7 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
             // If it's the first bitcoin ID, create a linked list in the wallet:
             if(createLList == 0)
             {
-                LinkedList* newLinkedList = initializeLinkedList(newBitcoinListNode);
+                newLinkedList = initializeLinkedList(newBitcoinListNode);
                 newWallet->bitcoins = newLinkedList;
                 newWallet->balance = bitcoinValue;
                 createLList++;
@@ -113,10 +107,31 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
             // If bitcoin already in hash table:
             if(inserted != 0)
             {
+                free(newBitcoinListNode);
+                free(newBitcoinNode);
+                free(newBitcoinRoot);
                 fprintf(stderr, "BitcoinID duplicate found. Goodbye for now my love.\n");
-                return 1;
+                break;
             }
             token = strtok(NULL, " ");
+        }
+
+        if(inserted != 0)
+        {
+            freeLinkedList(newLinkedList);
+            freeWallet(newWallet);
+            continue;
+        }
+
+        inserted = insertToWalletHashTable(*walletHashTable, newWallet,
+            walletID, walletHashTableNumOfEntries);
+
+        // If wallet already in hash table:
+        if(inserted != 0)
+        {
+            freeWallet(newWallet);
+            fprintf(stderr, "Wallet ID duplicate found. May we see each other again.\n");
+            break;
         }
         // printWallet(newWallet);
     }
@@ -128,16 +143,18 @@ int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHas
 
 void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         HashTable* receiverHashTable, HashTable* walletHashTable,
-        unsigned long int bitcoinValue, time_t* latestTransactionTime)
+        unsigned long int bitcoinValue, time_t* latestTransactionTime,
+        unsigned long int* latestTransactionID)
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
 
     char* transactionID;
+    unsigned long int transactionIDnum;
     char* sender;
     char* receiver;
     unsigned long value;
     char* date;
-    char* time;
+    char* _time;
 
     unsigned long int senderHashTableSize = senderHashTable->size;
     unsigned long int receiverHashTableSize = receiverHashTable->size;
@@ -157,7 +174,28 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         receiver = strtok(NULL, " ");
         value = strtoul(strtok(NULL, " "), NULL, 10);
         date = strtok(NULL, " ");
-        time = strtok(NULL, " ");
+        _time = strtok(NULL, " ");
+
+        int isnum = 1;
+        for(int i = 0; i < strlen(transactionID); i++)
+        {
+            if(isdigit(transactionID[i]))
+            {
+                continue;
+            }
+            else
+            {
+                isnum = 0;
+                break;
+            }
+        }
+        if(isnum == 1)
+        {
+            transactionIDnum = strtoul(transactionID, NULL, 10);
+            if(transactionIDnum > *latestTransactionID)
+                *latestTransactionID = transactionIDnum;
+        }
+
         Wallet* senderWallet = findWalletInHashTable(walletHashTable, sender);
         Wallet* receiverWallet = findWalletInHashTable(walletHashTable, receiver);
         if(senderWallet == NULL)
@@ -170,9 +208,14 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
             fprintf(stderr, "Haven't seen this WalletID before. %s Who's this?\n", receiver);
             continue;
         }
-        Transaction* newTransaction = initializeTransaction(transactionID, senderWallet, receiverWallet, value, date, time);
-        requestTransaction(newTransaction, walletHashTable, senderHashTable, receiverHashTable,
-            bitcoinValue, latestTransactionTime);
+        Transaction* newTransaction = initializeTransaction(transactionID, senderWallet, receiverWallet, value, date, _time);
+        int transactionDone = requestTransaction(newTransaction, walletHashTable, senderHashTable, receiverHashTable,
+            bitcoinValue, latestTransactionTime, 0);
+        if(transactionDone == 1)
+        {
+            free(newTransaction->transactionID);
+            free(newTransaction);
+        }
     }
     free(line);
     fclose(transactionFile);

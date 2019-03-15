@@ -2,6 +2,7 @@
 #define ERGASIA_1_FILE_WALLETS_H
 #include "transactions.h"
 #include "hashtable.h"
+#include <stdlib.h>
 
 typedef struct Transaction Transaction;
 
@@ -33,6 +34,7 @@ BitcoinNode* initializeBitcoin(Transaction* transaction, Wallet* wallet,
     unsigned long int quantity);
 BitcoinRoot* initializeBitcoinRoot(unsigned long int bitcoinID, BitcoinNode* bitcoinNode);
 unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID, Bucket* bucket, size_t bucketSize);
+BitcoinRoot* findBitcoin(unsigned long int bitcoinID, HashTable* bitcoins);
 unsigned long int insertToBitcoinHashTable(HashTable* hashTable, BitcoinRoot* bitcoinRoot,
         char* keyToHash, unsigned long int hashTableSize);
 

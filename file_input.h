@@ -2,6 +2,9 @@
 #define ERGASIA_1_FILE_INPUT_H
 #include "transactions.h"
 #include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 int readBitcoinBalancesFile(char* bitcoinBalancesFileName, HashTable** walletHashTable,
         HashTable** bitcoinHashTable, size_t bucketSize, unsigned long int bitcoinValue);

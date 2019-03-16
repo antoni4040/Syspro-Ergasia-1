@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// All the commands for the command-line interface are in here.
 #ifndef ERGASIA_1_COMMANDS_H
 #define ERGASIA_1_COMMANDS_H
 #define _XOPEN_SOURCE 700

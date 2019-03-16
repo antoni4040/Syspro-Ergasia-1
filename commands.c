@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// All the commands for the command-line interface are in here.
 #include "commands.h"
 
 void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
@@ -5,9 +7,11 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
     time_t* latestTransactionTime, unsigned long int* latestTransactionID)
 {
     char* command;
+    char* parameter1;
+    char* parameter2;
+    char firstLine[40];
 
     char* line;
-    char* rest;
     size_t len = 0;
 
     putchar('~');
@@ -29,14 +33,42 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
         }
         else if(strcmp(command, "requestTransactions") == 0)
         {
-            requestTransactionCommand(strtok(NULL, ";\n"), walletHashTable, senderHashTable,
-                    receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
-            getline(&line, & len, stdin);
-            while(strcmp(line, "\n") != 0)
+            parameter1 = strtok(NULL, " ");
+            parameter2 = strtok(NULL, " ");
+            if(parameter2 == NULL)
             {
-                requestTransactionCommand(strtok(line, ";\n"), walletHashTable, senderHashTable,
+                // Request transactions from file:
+                FILE* transactionsFile = fopen(parameter1, "r");
+                if(transactionsFile == NULL)
+                {
+                    printf("No such transactions file found.\n");
+                    putchar('~');
+                    putchar(' ');
+                    continue;
+                }
+                while(getline(&line, & len, transactionsFile) != EOF)
+                {
+                    requestTransactionCommand(strtok(line, ";\n"), walletHashTable, senderHashTable,
+                        receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
+                }
+                fclose(transactionsFile);
+            }
+            else
+            {
+                strcpy(firstLine, parameter1);
+                strcat(firstLine, " ");
+                strcat(firstLine, parameter2);
+                strcat(firstLine, " ");
+                strcat(firstLine, strtok(NULL, ";\n"));
+                requestTransactionCommand(firstLine, walletHashTable, senderHashTable,
                     receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
                 getline(&line, & len, stdin);
+                while(strcmp(line, "\n") != 0)
+                {
+                    requestTransactionCommand(strtok(line, ";\n"), walletHashTable, senderHashTable,
+                        receiverHashTable, latestTransactionTime, latestTransactionID, bitcoinValue);
+                    getline(&line, & len, stdin);
+                }
             }
         }
         else if(strcmp(command, "findEarnings") == 0)
@@ -411,7 +443,6 @@ void findEarningsPaymentsCommand(HashTable* hashtable, char* line, int walletTyp
 void bitCoinStatusCommand(char* bitcoinID, HashTable* bitcoins, int doWhat)
 {
     BitcoinRoot* bitcoinRoot = findBitcoin(strtoul(bitcoinID, NULL, 10), bitcoins);
-    Wallet* initialWallet = bitcoinRoot->rootNode->wallet;
     Node* firstNode = initializeNode(bitcoinRoot->rootNode);
     if(doWhat == 0)
         printf("Bitcoin initial value: %lu.\n", bitcoinRoot->rootNode->quantity);

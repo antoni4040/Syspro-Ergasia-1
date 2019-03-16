@@ -19,19 +19,6 @@ Bucket* initializeBucket(size_t bucketSize)
     return bucket;
 }
 
-// Check whether a bucket has a next bucket:
-int checkBucketHasNext(Bucket* bucket, size_t bucketSize)
-{
-    if(bucket[(bucketSize / sizeof(void*)) - 1] == NULL)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 // Find the first empty place in a bucket and insert an item, or create a new
 // bucket and insert it there:
 void insertToBucket(Bucket* bucket, void* item, size_t bucketSize)

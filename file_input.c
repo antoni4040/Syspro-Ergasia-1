@@ -1,8 +1,5 @@
 // Created by Antonis Karvelas.
 // Everything about opening and reading data from files resides here.
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "file_input.h"
 #include "transactions.h"
 #include "wallets.h"
@@ -148,6 +145,9 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
 {
     FILE* transactionFile = fopen(transactionFileName, "r");
 
+    HashTable* transactionIDs = initializeHashTable(senderHashTable->size,
+        senderHashTable->bucketSize);
+
     char* transactionID;
     unsigned long int transactionIDnum;
     char* sender;
@@ -155,9 +155,6 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
     unsigned long value;
     char* date;
     char* _time;
-
-    unsigned long int senderHashTableSize = senderHashTable->size;
-    unsigned long int receiverHashTableSize = receiverHashTable->size;
 
     //Check transaction file name is correct:
     if(transactionFile == NULL)
@@ -175,6 +172,40 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
         value = strtoul(strtok(NULL, " "), NULL, 10);
         date = strtok(NULL, " ");
         _time = strtok(NULL, " ");
+
+        unsigned long int index = hash_function(transactionID, transactionIDs->size);
+        char* currTransactionID = NULL;
+        int found = 0;
+        Bucket* bucket = transactionIDs->buckets[index];
+        while(bucket != NULL)
+        {
+            for(unsigned long int i = 0; i < (transactionIDs->bucketSize / sizeof(void*) - 2); i++)
+            {
+                currTransactionID = (char*)bucket[i];
+                if(currTransactionID == NULL)
+                    break;
+                if(strcmp(currTransactionID, transactionID) == 0)
+                {
+                    found = 1;
+                    break;
+                }
+            }
+            bucket = (Bucket*)bucket[(transactionIDs->bucketSize / sizeof(void*) - 1)];
+        }
+        if(found == 1)
+        {
+            fprintf(stderr, "Transaction ID already exists. Moving on...\n");
+            continue;
+        }
+        else
+        {
+            char* addTransactionID = malloc(strlen(transactionID) * sizeof(char));
+            strcpy(addTransactionID, transactionID);
+            bucket = transactionIDs->buckets[index];
+            while(bucket[(transactionIDs->bucketSize / sizeof(void*)) - 1] != NULL)
+                bucket = (Bucket*)bucket[(transactionIDs->bucketSize / sizeof(void*)) - 1];
+            insertToBucket(bucket, addTransactionID, transactionIDs->bucketSize);
+        }
 
         int isnum = 1;
         for(int i = 0; i < strlen(transactionID); i++)
@@ -217,6 +248,26 @@ void readTransactionsFile(char* transactionFileName, HashTable* senderHashTable,
             free(newTransaction);
         }
     }
+
+    for(unsigned long int i = 0; i < transactionIDs->size; i++)
+    {
+        Bucket* bucket = transactionIDs->buckets[i];
+        while(bucket != NULL)
+        {
+            for(unsigned long int j = 0; j < (transactionIDs->bucketSize / sizeof(void*) - 2); j++)
+            {
+                char* stringID = (char*)bucket[j];
+                if(stringID != NULL)
+                    free(stringID);
+            }
+            Bucket* bucketToFree = bucket;
+            bucket = (Bucket*)bucket[(transactionIDs->bucketSize / sizeof(void*) - 1)];
+            free(bucketToFree);
+        }
+    }
+    free(transactionIDs->buckets);
+    free(transactionIDs);
+
     free(line);
     fclose(transactionFile);
 }

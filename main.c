@@ -94,7 +94,9 @@ int main(int argc, char **argv)
     free(transactionsFile);
     freeTransactionHashtable(senderHashTable);
     freeTransactionHashtableCore(receiverHashTable);
+    if(walletHashTable != NULL)
     freeWalletHashTable(walletHashTable);
-    freeBitcoinHashTable(bitcoinHashTable);
+    if(bitcoinHashTable != NULL)
+        freeBitcoinHashTable(bitcoinHashTable);
     return 0;
 }

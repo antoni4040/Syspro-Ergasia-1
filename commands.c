@@ -9,7 +9,8 @@ void commandLine(HashTable* senderHashTable, HashTable* receiverHashTable,
     char* command;
     char* parameter1;
     char* parameter2;
-    char firstLine[40];
+    // That's a bit of a hack...
+    char firstLine[256];
 
     char* line;
     size_t len = 0;

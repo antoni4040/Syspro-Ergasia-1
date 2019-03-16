@@ -1,7 +1,7 @@
 OBJS    =	main.o  commands.o  file_input.o  hashtable.o  linked_list.o  transactions.o verification.o  wallets.o
 SOURCE  =	main.c  commands.c  file_input.c  hashtable.c  linked_list.c  transactions.c verification.c  wallets.c
 HEADER  =	commands.h  file_input.h  hashtable.h  linked_list.h  transactions.h verification.h  wallets.h
-OUT     =	myexe
+OUT     =	bitcoinSimulation
 CC      =	gcc
 FLAGS   =       -Wall   -g      -c      -std=c99
 

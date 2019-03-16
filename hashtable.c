@@ -1,5 +1,5 @@
 // Created by Antonis Karvelas.
-
+// Here lies the generic hash table.
 #include "hashtable.h"
 #include <stdio.h>
 

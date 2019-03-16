@@ -1,3 +1,7 @@
+// Created by Antonis Karvelas.
+// Here lies the generic linked list.
+// Quite a lot of generic data structures, but I feel shame when I have to
+// rewrite code that I could otherwise abstract a bit.
 #include "linked_list.h"
 #include <stdio.h>
 #include <stdlib.h>

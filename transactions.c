@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// Everything that has to do with transactions in here.
 #include "transactions.h"
 #include "wallets.h"
 #include <stdio.h>

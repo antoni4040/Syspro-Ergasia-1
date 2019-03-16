@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// Everything about opening and reading data from files resides here.
 #ifndef ERGASIA_1_FILE_INPUT_H
 #define ERGASIA_1_FILE_INPUT_H
 #include "transactions.h"

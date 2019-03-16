@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// Everything about wallets and bitcoins is in here.
 #include "wallets.h"
 #include <string.h>
 #include <stdio.h>
@@ -61,7 +63,6 @@ unsigned long int checkBitcoinInBucket(unsigned long int bitcoinID,
 // Return the bitcoin if found in the hashtable:
 BitcoinRoot* findBitcoin(unsigned long int bitcoinID, HashTable* bitcoins)
 {
-    BitcoinRoot* bitcoinToReturn;
     char bitcoinIDString[20];
     sprintf(bitcoinIDString, "%lu", bitcoinID);
     unsigned long int index = hash_function(bitcoinIDString, bitcoins->size);
@@ -181,7 +182,7 @@ unsigned long int insertToWalletHashTable(HashTable* hashTable, Wallet* wallet,
         return 0;
     }
 
-    // If wallet is already in a bucket, then shit has hit the fun:
+    // If wallet is already in a bucket, then shit has hit the fan:
     else
     {
         return -1;
@@ -292,7 +293,6 @@ void freeWalletHashTable(HashTable* wallets)
     for(unsigned long int i = 0; i < wallets->size; i++)
     {
         Bucket* bucket = wallets->buckets[i];
-        Node* node;
         while(bucket != NULL)
         {
             for(unsigned long int j = 0; j < ((wallets->bucketSize) / sizeof(void*) - 2); j++)

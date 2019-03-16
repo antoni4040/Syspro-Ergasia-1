@@ -1,3 +1,5 @@
+// Created by Antonis Karvelas.
+// Everything about wallets and bitcoins is in here.
 #ifndef ERGASIA_1_FILE_WALLETS_H
 #define ERGASIA_1_FILE_WALLETS_H
 #include "transactions.h"
